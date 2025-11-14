@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  role      String   @default("user")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Email verification fields
+  isEmailVerified Boolean @default(false)
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  
+  // Password reset fields
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  moodEntries      MoodEntry[]
+  journalEntries   JournalEntry[]
+  breathingSessions BreathingSession[]
+  supportGroupMembers SupportGroupMember[]
+  messages         SupportGroupMessage[]
+
+  @@map("users")
+}
+
+model MoodEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  mood      Int      // 1-5 scale (1=very sad, 5=very happy)
+  notes     String?
+  factors   Json?    // {sleep: 7, stress: 3, exercise: true}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("mood_entries")
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  content   String   @db.Text
+  sentiment Float?   // AI analysis score (-1 to 1)
+  tags      Json?
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("journal_entries")
+}
+
+model BreathingSession {
+  id        String   @id @default(cuid())
+  userId    String
+  duration  Int      // in seconds
+  technique String   // "4-7-8", "box", "478"
+  completed Boolean  @default(true)
+  calmLevel Int?     // 1-10 scale after session
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("breathing_sessions")
+}
+
+model SupportGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isPublic    Boolean  @default(true)
+  maxMembers  Int      @default(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  members   SupportGroupMember[]
+  messages  SupportGroupMessage[]
+
+  @@map("support_groups")
+}
+
+model SupportGroupMember {
+  id             String   @id @default(cuid())
+  userId         String
+  supportGroupId String
+  role           String   @default("member") // "member", "moderator", "admin"
+  joinedAt       DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id])
+  supportGroup SupportGroup @relation(fields: [supportGroupId], references: [id])
+
+  @@unique([userId, supportGroupId])
+  @@map("support_group_members")
+}
+
+model SupportGroupMessage {
+  id             String   @id @default(cuid())
+  content        String
+  userId         String
+  supportGroupId String
+  messageType    String   @default("text") // "text", "image", "system"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id])
+  supportGroup SupportGroup @relation(fields: [supportGroupId], references: [id])
+
+  @@map("support_group_messages")
+}

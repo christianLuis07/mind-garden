@@ -1,0 +1,122 @@
+// src/controllers/supportController.js
+const supportService = require("../services/supportService");
+const { successResponse, errorResponse } = require("../utils/response");
+
+const createSupportGroup = async (req, res, next) => {
+  try {
+    const supportGroup = await supportService.createSupportGroup(
+      req.body,
+      req.user.id
+    );
+
+    successResponse(
+      res,
+      "Support group created successfully",
+      { supportGroup },
+      201
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getSupportGroups = async (req, res, next) => {
+  try {
+    const result = await supportService.getSupportGroups(req.query);
+
+    successResponse(res, "Support groups retrieved successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getSupportGroup = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const supportGroup = await supportService.getSupportGroupById(
+      id,
+      req.user.id
+    );
+
+    successResponse(res, "Support group retrieved successfully", {
+      supportGroup,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const joinSupportGroup = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const member = await supportService.joinSupportGroup(id, req.user.id);
+
+    successResponse(res, "Successfully joined the support group", { member });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const leaveSupportGroup = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await supportService.leaveSupportGroup(id, req.user.id);
+
+    successResponse(res, result.message);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getGroupMessages = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await supportService.getGroupMessages(
+      id,
+      req.user.id,
+      req.query
+    );
+
+    successResponse(res, "Group messages retrieved successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createGroupMessage = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const message = await supportService.createGroupMessage(
+      id,
+      req.user.id,
+      req.body
+    );
+
+    successResponse(res, "Message sent successfully", { message }, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserSupportGroups = async (req, res, next) => {
+  try {
+    const userGroups = await supportService.getUserSupportGroups(req.user.id);
+
+    successResponse(res, "User support groups retrieved successfully", {
+      groups: userGroups,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  createSupportGroup,
+  getSupportGroups,
+  getSupportGroup,
+  joinSupportGroup,
+  leaveSupportGroup,
+  getGroupMessages,
+  createGroupMessage,
+  getUserSupportGroups,
+};
