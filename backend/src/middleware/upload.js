@@ -74,7 +74,6 @@ const handleUploadError = (error, req, res, next) => {
       message: error.message,
     });
   }
-
   next(error);
 };
 
