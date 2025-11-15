@@ -63,6 +63,7 @@ model JournalEntry {
   userId    String
   title     String?
   content   String   @db.Text
+  images    Json?
   sentiment Float?   // AI analysis score (-1 to 1)
   tags      Json?
   isPublic  Boolean  @default(false)
@@ -123,6 +124,7 @@ model SupportGroupMessage {
   userId         String
   supportGroupId String
   messageType    String   @default("text") // "text", "image", "system"
+  imageUrl       String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
