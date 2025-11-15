@@ -202,7 +202,7 @@ class AuthService {
     });
 
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new Error("Email atau kata sandi salah.");
     }
 
     if (user.isActive === false) {
@@ -212,7 +212,7 @@ class AuthService {
     // check password
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-      throw new Error("Invalid credentials");
+      throw new Error("Email atau kata sandi salah.");
     }
 
     // check if email is verified
