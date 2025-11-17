@@ -10,18 +10,23 @@ const faqs = [
   {
     question: "Berapa biaya menggunakan MindGarden?",
     answer:
-      "MindGarden menyediakan paket gratis dengan semua fitur dasar. Website ini 100% gratis dan bisa akses ke analisis lanjutan, catatan jurnal tak terbatas, dan dukungan premium. Kamu bisa mulai gratis dan upgrade kapan saja.",
+      "MindGarden 100% GRATIS selamanya! Tidak ada biaya tersembunyi, tidak ada langganan, tidak ada pembatasan fitur. Semua yang kamu lihat - mood tracking, journaling, latihan pernapasan, komunitas - semuanya gratis. Kami percaya tools kesehatan mental harus bisa diakses semua orang.",
+  },
+  {
+    question: "Apakah ada batasan penggunaan?",
+    answer:
+      "Tidak ada batasan! Kamu bisa membuat journal entries sebanyak yang kamu mau, track mood setiap hari, ikuti semua latihan pernapasan, dan bergabung dengan komunitas support groups - semuanya tanpa batas dan tetap gratis selamanya.",
   },
   {
     question: "Apakah saya membutuhkan perangkat khusus?",
     answer:
-      "Tidak sama sekali! MindGarden dapat digunakan di perangkat apa pun dengan browser ponsel, tablet, atau komputer. Tidak perlu perangkat khusus, wearable, atau instalasi tambahan (meskipun kami juga menyediakan aplikasi mobile untuk kemudahan).",
+      "Tidak sama sekali! MindGarden dapat digunakan di perangkat apa pun dengan browser - ponsel, tablet, atau komputer. Tidak perlu perangkat khusus, wearable, atau instalasi tambahan.",
   },
   {
     question:
       "Apa yang membedakan MindGarden dari aplikasi kesehatan mental lainnya?",
     answer:
-      "MindGarden menggabungkan pelacakan mood, journaling, latihan pernapasan, dan dukungan komunitas dalam satu platform terintegrasi. Berbeda dengan aplikasi lain yang fokus pada satu aspek saja, kami membantu kamu melihat keseluruhan perjalanan kesehatan mentalmu.",
+      "MindGarden menggabungkan pelacakan mood, journaling, latihan pernapasan, dan dukungan komunitas dalam satu platform terintegrasi. Yang paling penting - semuanya GRATIS! Berbeda dengan aplikasi lain yang biasanya berbayar atau freemium, kami memberikan semua fitur tanpa biaya.",
   },
   {
     question: "Bisakah saya menggunakan MindGarden bersama terapis saya?",
@@ -36,12 +41,12 @@ const faqs = [
   {
     question: "Apakah ada komunitas atau grup dukungan?",
     answer:
-      "Ya! Kami memiliki grup dukungan yang dimoderasi untuk berbagai topik (kecemasan, depresi, manajemen stres, dll.). Kamu bisa berpartisipasi secara anonim jika mau, dan pedoman komunitas kami menjamin lingkungan yang aman dan mendukung.",
+      "Ya! Kami memiliki grup dukungan yang dimoderasi untuk berbagai topik (kecemasan, depresi, manajemen stres, dll.). Kamu bisa berpartipasi secara anonim jika mau, dan pedoman komunitas kami menjamin lingkungan yang aman dan mendukung - dan tentu saja GRATIS!",
   },
   {
-    question: "Bisakah saya membatalkan kapan saja?",
+    question: "Bagaimana MindGarden bisa gratis selamanya?",
     answer:
-      "Tentu saja. Tidak ada kontrak jangka panjang. Kamu bisa membatalkan langganan premium kapan saja dan tetap memiliki akses ke data dan fitur gratis. Kami percaya pada kepercayaanmu setiap bulan.",
+      "Kami berkomitmen untuk membuat tools kesehatan mental bisa diakses semua orang. MindGarden didukung oleh grants dan donasi komunitas. Kami mungkin menawarkan fitur premium opsional di masa depan, tapi fungsi utama akan tetap GRATIS selamanya. Tidak ada iklan, tidak ada penjualan data.",
   },
 ];
 
@@ -87,7 +92,7 @@ export function FAQSection() {
               href="/register"
               className="inline-flex items-center px-6 py-3 border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white font-semibold rounded-lg transition-colors"
             >
-              Coba Gratis
+              Mulai Gratis Sekarang
             </a>
           </div>
         </div>

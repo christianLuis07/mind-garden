@@ -36,8 +36,9 @@ export default function Home() {
                 <span className="font-bold text-xl">MindGarden</span>
               </div>
               <p className="text-gray-400 max-w-md">
-                Your companion for mental wellness. Track, reflect, breathe, and
-                grow in a safe, supportive environment.
+                Teman tepercaya untuk kesehatan mentalmu. Pantau, refleksikan,
+                bernapas, dan berkembang dalam ruang yang aman dan penuh
+                dukungan.
               </p>
             </div>
 
@@ -50,7 +51,7 @@ export default function Home() {
                     href="#features"
                     className="hover:text-white transition-colors"
                   >
-                    Features
+                    Fitur
                   </a>
                 </li>
                 <li>
@@ -58,7 +59,7 @@ export default function Home() {
                     href="#how-it-works"
                     className="hover:text-white transition-colors"
                   >
-                    How It Works
+                    Cara Kerja
                   </a>
                 </li>
                 <li>
@@ -66,7 +67,7 @@ export default function Home() {
                     href="#testimonials"
                     className="hover:text-white transition-colors"
                   >
-                    Testimonials
+                    Testimoni
                   </a>
                 </li>
                 <li>
