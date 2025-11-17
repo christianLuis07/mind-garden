@@ -100,8 +100,8 @@ export function HowItWorks() {
         {/* Bottom Note */}
         <div className="text-center mt-12 p-6 bg-gray-50 rounded-2xl">
           <p className="text-gray-600">
-            <strong>Tidak perlu komitmen.</strong> Mulai dengan paket gratis dan
-            tingkatkan kapan saja untuk membuka fitur lanjutan.
+            <strong>Sepenuhnya gratis selamanya</strong> Tidak perlu kartu
+            kredit, tanpa biaya tersembunyi, tanpa biaya tambahan.
           </p>
         </div>
       </div>
