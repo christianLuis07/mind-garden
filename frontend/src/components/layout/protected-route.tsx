@@ -10,16 +10,16 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (hasHydrated && !isLoading && !isAuthenticated) {
       router.push("/login");
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
+  if (!hasHydrated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

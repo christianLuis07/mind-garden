@@ -10,9 +10,15 @@ import {
   Users,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+
+interface SidebarProps {
+  onClose?: () => void;
+}
 
 const navigation = [
   { name: "Beranda", href: "/dashboard", icon: LayoutDashboard },
@@ -23,7 +29,7 @@ const navigation = [
   { name: "Pengaturan", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, clearAuth } = useAuthStore();
 
@@ -34,8 +40,27 @@ export function Sidebar() {
 
   return (
     <div className="flex flex-col w-64 bg-white border-r border-gray-200 h-full">
+      {/* Mobile Close Button */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-linear-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-sm">MG</span>
+          </div>
+          <div>
+            <h1 className="font-bold text-gray-900">MindGarden</h1>
+            <p className="text-xs text-gray-500">
+              Hello, {user?.name || "User"}!
+            </p>
+          </div>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Desktop Logo (hidden on mobile) */}
       {/* Logo */}
-      <div className="flex items-center space-x-3 px-6 py-4 border-b border-gray-200">
+      <div className="hidden lg:flex items-center space-x-3 px-6 py-4 border-b border-gray-200">
         <div className="w-8 h-8 bg-linear-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
           <span className="text-white font-bold text-sm">MG</span>
         </div>
