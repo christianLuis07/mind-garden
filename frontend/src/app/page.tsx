@@ -1,4 +1,3 @@
-// src/app/page.tsx
 import { LandingHeader } from "@/components/layout/landing-header";
 import { HeroSection } from "@/components/landing/hero-section";
 import { ProblemSection } from "@/components/landing/problem-section";
