@@ -7,7 +7,7 @@ const handleValidationErrors = (req, res, next) => {
   if (!errors.isEmpty()) {
     return errorResponse(
       res,
-      "Validation Failed",
+      "gagal melakukan validasi",
       400,
       errors.array().map((err) => ({
         field: err.param,
@@ -77,12 +77,25 @@ const validateJournalEntry = [
     .isLength({ max: 200 })
     .withMessage("Judul maksimal 200 karakter"),
   body("content")
-    .trim()
-    .isLength({ min: 1, max: 10000 })
-    .withMessage("Konten harus terdiri dari 1 hingga 10.000 karakter"),
+    .custom((value) => {
+      if (!value) return false;
+      const strippedContent = value.replace(/<[^>]*>/g, "").trim();
+      if (strippedContent.length === 0 && !value.includes("<img")) {
+        return false;
+      }
+
+      return true;
+    })
+    .withMessage("Konten jurnal tidak boleh kosong"),
+
   body("tags.*").isString().withMessage("Setiap tag harus berupa teks"),
   body("isPublic")
     .optional()
+    .customSanitizer((value) => {
+      if (value === "true") return true;
+      if (value === "false") return false;
+      return value;
+    })
     .isBoolean()
     .withMessage("isPublic harus berupa boolean"),
   handleValidationErrors,

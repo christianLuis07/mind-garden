@@ -10,7 +10,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -62,7 +61,7 @@ model JournalEntry {
   id        String   @id @default(cuid())
   userId    String
   title     String?
-  content   String   @db.Text
+  content   String   @db.LongText
   images    Json?
   sentiment Float?   // AI analysis score (-1 to 1)
   tags      Json?
