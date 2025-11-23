@@ -4,6 +4,7 @@ const { prisma } = require("../config/database");
 const { sanitizeUser } = require("../utils/helpers");
 const tokenService = require("./tokenService");
 const emailService = require("./emailService");
+const fileUploadService = require("./fileUploadService");
 
 class AuthService {
   constructor() {
@@ -260,34 +261,57 @@ class AuthService {
     return user;
   }
 
-  async updateProfile(userId, updateData) {
-    const allowedUpdates = ["name", "avatar"];
-    const filteredData = Object.keys(updateData)
-      .filter((key) => allowedUpdates.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = updateData[key];
-        return obj;
-      }, {});
+  async updateProfile(userId, updateData, file) {
+    try {
+      let avatarUrl = updateData.avatar;
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: filteredData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+      // jika avatar baru berhasil diupload
+      if (file) {
+        // hapus avatar lama jika ada
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (user.avatar) {
+          const oldPublicId = fileUploadService.extractPublicId(user.avatar);
+          if (oldPublicId) {
+            await fileUploadService.deleteImage(oldPublicId);
+          }
+        }
 
-    if (!user) {
-      throw new Error("User tidak ditemukan");
+        //upload avatar baru
+        avatarUrl = await fileUploadService.uploadAvatar(file, userId);
+      }
+
+      const allowedUpdates = ["name", "avatar"];
+      const filteredData = Object.keys(updateData)
+        .filter((key) => allowedUpdates.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = updateData[key];
+          return obj;
+        }, {});
+
+      // Update avatar url jika avatar baru berhasil diupload
+      if (avatarUrl) {
+        filteredData.avatar = avatarUrl;
+      }
+
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: filteredData,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          avatar: true,
+          role: true,
+          isEmailVerified: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new Error(`Profile Upload Gagal: ${error.message}`);
     }
-
-    return user;
   }
 }
 
