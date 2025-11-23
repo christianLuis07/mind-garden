@@ -7,7 +7,7 @@ const handleValidationErrors = (req, res, next) => {
   if (!errors.isEmpty()) {
     return errorResponse(
       res,
-      "Validation Failed",
+      "gagal melakukan validasi",
       400,
       errors.array().map((err) => ({
         field: err.param,
