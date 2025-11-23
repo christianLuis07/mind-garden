@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { MoodInputForm } from "@/components/mood/mood-input-form";
 import { MoodHistory } from "@/components/mood/mood-history";
 import { MoodAnalytics } from "@/components/mood/mood-analytics";
