@@ -7,7 +7,7 @@ class BreathingService {
     const breathingSession = await prisma.breathingSession.create({
       data: {
         userId,
-        duration: duration || 300, // default 5 minutes
+        duration: duration || 300,
         technique: technique || "box",
         calmLevel,
       },
@@ -31,14 +31,14 @@ class BreathingService {
 
     const where = { userId };
 
-    // Date range filter
+    // Filter rentang tanggal
     if (startDate || endDate) {
       where.createdAt = {};
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
-    // Technique filter
+    // Filter teknik
     if (technique) {
       where.technique = technique;
     }
@@ -87,14 +87,23 @@ class BreathingService {
     });
 
     const stats = this.calculateSessionStats(sessions);
+
     const techniqueUsage = this.analyzeTechniqueUsage(sessions);
-    const weeklyPatterns = this.calculateWeeklyPatterns(sessions);
+
+    const favoriteTechnique = this.findFavoriteTechnique(techniqueUsage);
+
+    const sessionsPerDay = this.calculateSessionsPerDay(sessions);
 
     return {
-      overview: stats,
-      techniqueUsage,
-      weeklyPatterns,
-      recentSessions: sessions.slice(0, 10),
+      totalSessions: stats.totalSessions,
+      totalDuration: stats.totalDuration, // Dalam menit
+      averageCalmLevel: stats.averageCalmLevel,
+      favoriteTechnique: favoriteTechnique,
+      sessionsPerDay: sessionsPerDay,
+      techniqueUsage: techniqueUsage,
+      recentSessions: sessions
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 5),
     };
   }
 
@@ -103,23 +112,20 @@ class BreathingService {
       return {
         totalSessions: 0,
         totalDuration: 0,
-        averageDuration: 0,
         averageCalmLevel: 0,
-        completionRate: 0,
       };
     }
 
-    const totalDuration = sessions.reduce(
+    const totalSeconds = sessions.reduce(
       (sum, session) => sum + session.duration,
       0
     );
-    const averageDuration = totalDuration / sessions.length;
-    const completedSessions = sessions.filter(
-      (session) => session.completed
-    ).length;
+    const totalDuration = Math.round(totalSeconds / 60);
+
     const sessionsWithCalmLevel = sessions.filter(
       (session) => session.calmLevel !== null
     );
+
     const averageCalmLevel =
       sessionsWithCalmLevel.length > 0
         ? sessionsWithCalmLevel.reduce(
@@ -131,11 +137,7 @@ class BreathingService {
     return {
       totalSessions: sessions.length,
       totalDuration,
-      averageDuration: parseFloat(averageDuration.toFixed(2)),
-      averageCalmLevel: parseFloat(averageCalmLevel.toFixed(2)),
-      completionRate: parseFloat(
-        ((completedSessions / sessions.length) * 100).toFixed(2)
-      ),
+      averageCalmLevel: parseFloat(averageCalmLevel.toFixed(1)),
     };
   }
 
@@ -149,33 +151,27 @@ class BreathingService {
     return techniqueCounts;
   }
 
-  calculateWeeklyPatterns(sessions) {
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const patterns = daysOfWeek.reduce((acc, day) => {
-      acc[day] = { count: 0, totalDuration: 0, averageDuration: 0 };
-      return acc;
-    }, {});
+  findFavoriteTechnique(techniqueUsage) {
+    if (Object.keys(techniqueUsage).length === 0) return "-";
+
+    return Object.entries(techniqueUsage).sort(([, a], [, b]) => b - a)[0][0];
+  }
+
+  calculateSessionsPerDay(sessions) {
+    const dailyCounts = {};
 
     sessions.forEach((session) => {
-      const day = daysOfWeek[session.createdAt.getDay()];
-      patterns[day].count++;
-      patterns[day].totalDuration += session.duration;
+      const dateKey = session.createdAt.toISOString().split("T")[0];
+      dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1;
     });
 
-    // Calculate averages
-    Object.keys(patterns).forEach((day) => {
-      if (patterns[day].count > 0) {
-        patterns[day].averageDuration = parseFloat(
-          (patterns[day].totalDuration / patterns[day].count).toFixed(2)
-        );
-      }
-    });
-
-    return patterns;
+    return dailyCounts;
   }
 
   calculateStartDate(timeframe) {
     const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
     switch (timeframe) {
       case "7d":
         return new Date(now.setDate(now.getDate() - 7));
@@ -183,84 +179,86 @@ class BreathingService {
         return new Date(now.setDate(now.getDate() - 30));
       case "90d":
         return new Date(now.setDate(now.getDate() - 90));
+      case "1y":
+        return new Date(now.setFullYear(now.getFullYear() - 1));
       default:
-        return new Date(now.setDate(now.getDate() - 30));
+        return new Date(0);
     }
   }
 
-  // Breathing techniques data
   getBreathingTechniques() {
     return {
       box: {
-        name: "Box Breathing",
+        name: "Pernapasan Kotak (Box Breathing)",
         description:
-          "Also known as four-square breathing. Inhale, hold, exhale, hold - each for 4 counts.",
+          "Dikenal juga sebagai pernapasan empat persegi. Tarik napas, tahan, buang napas, tahan - masing-masing selama 4 hitungan.",
         steps: [
-          "Inhale slowly through your nose for 4 counts",
-          "Hold your breath for 4 counts",
-          "Exhale slowly through your mouth for 4 counts",
-          "Hold your breath for 4 counts",
-          "Repeat the cycle",
+          "Tarik napas perlahan melalui hidung selama 4 hitungan",
+          "Tahan napas selama 4 hitungan",
+          "Buang napas perlahan melalui mulut selama 4 hitungan",
+          "Tahan napas selama 4 hitungan",
+          "Ulangi siklus ini",
         ],
-        duration: 300, // 5 minutes
+        duration: 300,
         benefits: [
-          "Reduces stress",
-          "Improves focus",
-          "Regulates nervous system",
+          "Mengurangi stres",
+          "Meningkatkan fokus",
+          "Mengatur sistem saraf",
         ],
       },
       478: {
-        name: "4-7-8 Breathing",
+        name: "Pernapasan 4-7-8",
         description:
-          "Developed by Dr. Andrew Weil. Inhale for 4, hold for 7, exhale for 8.",
+          "Dikembangkan oleh Dr. Andrew Weil. Tarik napas 4 hitungan, tahan 7, buang napas 8.",
         steps: [
-          "Inhale quietly through your nose for 4 counts",
-          "Hold your breath for 7 counts",
-          "Exhale completely through your mouth for 8 counts",
-          "Repeat the cycle 3-4 times",
+          "Tarik napas perlahan melalui hidung selama 4 hitungan",
+          "Tahan napas selama 7 hitungan",
+          "Buang napas sepenuhnya melalui mulut selama 8 hitungan",
+          "Ulangi siklus ini 3-4 kali",
         ],
-        duration: 240, // 4 minutes
+        duration: 240,
         benefits: [
-          "Promotes relaxation",
-          "Helps with sleep",
-          "Reduces anxiety",
+          "Meningkatkan relaksasi",
+          "Membantu tidur lebih cepat",
+          "Mengurangi kecemasan",
         ],
       },
       belly: {
-        name: "Belly Breathing",
-        description: "Deep diaphragmatic breathing that engages the belly.",
+        name: "Pernapasan Perut (Belly Breathing)",
+        description:
+          "Pernapasan diafragma dalam yang melibatkan pengembangan perut.",
         steps: [
-          "Place one hand on your chest and the other on your belly",
-          "Inhale slowly through your nose, feeling your belly rise",
-          "Exhale slowly through your mouth, feeling your belly fall",
-          "Keep your chest relatively still",
+          "Letakkan satu tangan di dada dan tangan lainnya di perut",
+          "Tarik napas perlahan melalui hidung, rasakan perut mengembang",
+          "Buang napas perlahan melalui mulut, rasakan perut mengempis",
+          "Usahakan dada tetap diam selama proses ini",
         ],
-        duration: 300, // 5 minutes
+        duration: 300,
         benefits: [
-          "Reduces tension",
-          "Improves oxygen exchange",
-          "Calms the mind",
+          "Mengurangi ketegangan fisik",
+          "Meningkatkan pertukaran oksigen",
+          "Menenangkan pikiran",
         ],
       },
       alternate: {
-        name: "Alternate Nostril Breathing",
+        name: "Pernapasan Hidung Bergantian",
         description:
-          "A yogic breathing technique that alternates between nostrils.",
+          "Teknik pernapasan yoga (Nadi Shodhana) yang bergantian antara lubang hidung kiri dan kanan.",
         steps: [
-          "Sit comfortably with your spine straight",
-          "Close your right nostril with your right thumb",
-          "Inhale through your left nostril",
-          "Close your left nostril with your right ring finger",
-          "Exhale through your right nostril",
-          "Inhale through your right nostril",
-          "Close your right nostril and exhale through your left",
-          "Repeat the cycle",
+          "Duduk nyaman dengan punggung tegak",
+          "Tutup lubang hidung kanan dengan ibu jari kanan",
+          "Tarik napas melalui lubang hidung kiri",
+          "Tutup lubang hidung kiri dengan jari manis kanan",
+          "Buang napas melalui lubang hidung kanan",
+          "Tarik napas kembali melalui lubang hidung kanan",
+          "Tutup lubang hidung kanan dan buang napas melalui kiri",
+          "Ulangi siklus ini",
         ],
-        duration: 360, // 6 minutes
+        duration: 360, // 6 menit
         benefits: [
-          "Balances hemispheres of brain",
-          "Reduces stress",
-          "Improves focus",
+          "Menyeimbangkan otak kiri dan kanan",
+          "Mengurangi stres emosional",
+          "Meningkatkan konsentrasi",
         ],
       },
     };

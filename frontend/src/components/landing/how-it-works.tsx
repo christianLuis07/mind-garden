@@ -27,7 +27,7 @@ const steps = [
     number: "04",
     title: "Bangun Kebiasaan Sehat",
     description:
-      "Gunakan latihan pernapasan dan dukungan komunitas untuk membangun kebiasaan kesejahteraan mental yang berkelanjutan.",
+      "Gunakan latihan pernapasan dan dukungan komunitas untuk membangun kebiasaan kesejahteraan mental yang berkeintermediate.",
     icon: Leaf,
   },
   {
