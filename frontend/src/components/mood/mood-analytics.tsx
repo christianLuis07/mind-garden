@@ -159,10 +159,10 @@ export function MoodAnalytics({ refreshTrigger }: MoodAnalyticsProps) {
         <div className="text-center py-12">
           <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Analytics Data
+            Data Analisis Tidak Ada
           </h3>
           <p className="text-gray-500">
-            Start logging your mood to see analytics and insights.
+            Mulai catat suasana hatimu untuk melihat analitik dan wawasan.
           </p>
         </div>
       </div>
@@ -174,11 +174,9 @@ export function MoodAnalytics({ refreshTrigger }: MoodAnalyticsProps) {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Mood Analytics
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">Mood Analisis</h2>
           <p className="text-gray-600 text-sm">
-            Understand your mood patterns and trends
+            Pahami pola dan tren suasana hatimu.
           </p>
         </div>
 
@@ -252,7 +250,9 @@ export function MoodAnalytics({ refreshTrigger }: MoodAnalyticsProps) {
           <div className="text-2xl font-bold text-purple-900">
             {Math.max(...Object.values(moodDistribution).map((v) => Number(v)))}
           </div>
-          <div className="text-purple-700 text-sm">Most Frequent Mood</div>
+          <div className="text-purple-700 text-sm">
+            Mood yang Paling Sering Muncul
+          </div>
         </div>
       </div>
 
@@ -343,7 +343,7 @@ export function MoodAnalytics({ refreshTrigger }: MoodAnalyticsProps) {
             (chartType === "pie" &&
               !distributionData.some((item) => item.value > 0) && (
                 <div className="flex items-center justify-center h-full text-gray-500">
-                  No data available for this chart type
+                  Belum ada data untuk jenis grafik ini.
                 </div>
               ))}
         </div>
@@ -390,7 +390,7 @@ export function MoodAnalytics({ refreshTrigger }: MoodAnalyticsProps) {
         {/* Weekly Patterns */}
         <div className="h-64">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Weekly Patterns
+            pola Mingguan
           </h3>
           <div className="space-y-3">
             {weeklyData.map((day) => (
