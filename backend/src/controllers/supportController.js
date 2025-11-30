@@ -122,6 +122,44 @@ const inviteUser = async (req, res, next) => {
   }
 };
 
+const promoteMember = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    await supportService.promoteMember(id, userId, req.user.id);
+    successResponse(res, "Member promoted to admin successfully", null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeMember = async (req, res, next) => {
+  try {
+    const { id, userId } = req.params;
+
+    await supportService.removeMember(id, userId, req.user.id);
+    successResponse(res, "Member removed from group successfully", null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getGroupMembers = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const members = await supportService.getGroupMembers(id, req.user.id);
+    successResponse(
+      res,
+      "Group members retrieved successfully",
+      { members },
+      200
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createSupportGroup,
   getSupportGroups,
@@ -132,4 +170,7 @@ module.exports = {
   createGroupMessage,
   getUserSupportGroups,
   inviteUser,
+  promoteMember,
+  removeMember,
+  getGroupMembers,
 };

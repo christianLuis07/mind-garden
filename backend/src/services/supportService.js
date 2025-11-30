@@ -454,6 +454,83 @@ class SupportService {
 
     return true;
   }
+
+  async promoteMember(groupId, targetUserId, requesterId) {
+    // cek apakah requester adalah admin
+    const requester = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: { userId: requesterId, supportGroupId: groupId },
+      },
+    });
+
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Hanya admin yang dapat mempromosikan anggota");
+    }
+
+    // update member target menjadi admin
+    const updatedMember = await prisma.supportGroupMember.update({
+      where: {
+        userId_supportGroupId: {
+          userId: targetUserId,
+          supportGroupId: groupId,
+        },
+      },
+      data: { role: "admin" },
+    });
+
+    return updatedMember;
+  }
+
+  async removeMember(groupId, targetUserId, requesterId) {
+    // cek Requester adalah admin
+    const requester = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: { userId: requesterId, supportGroupId: groupId },
+      },
+    });
+
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Hanya admin yang dapat menghapus anggota");
+    }
+
+    // tidak boleh kick sesama admin
+    const target = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: {
+          userId: targetUserId,
+          supportGroupId: groupId,
+        },
+      },
+    });
+
+    if (target && target.role === "admin") {
+      throw new Error("Tidak dapat menghapus sesama admin");
+    }
+
+    // hapus member
+    await prisma.supportGroupMember.delete({
+      where: {
+        userId_supportGroupId: {
+          userId: targetUserId,
+          supportGroupId: groupId,
+        },
+      },
+    });
+
+    return { message: "Anggota berhasil dihapus dari grup" };
+  }
+
+  async getGroupMembers(groupId) {
+    return await prisma.supportGroupMember.findMany({
+      where: { supportGroupId: groupId },
+      include: {
+        user: {
+          select: { id: true, name: true, avatar: true, email: true },
+        },
+      },
+      orderBy: { joinedAt: "asc" },
+    });
+  }
 }
 
 module.exports = new SupportService();
