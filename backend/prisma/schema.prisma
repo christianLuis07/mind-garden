@@ -39,6 +39,7 @@ model User {
   breathingSessions BreathingSession[]
   supportGroupMembers SupportGroupMember[]
   messages         SupportGroupMessage[]
+  invitations     SupportGroupInvitation[]
 
   @@map("users")
 }
@@ -99,6 +100,7 @@ model SupportGroup {
   
   members   SupportGroupMember[]
   messages  SupportGroupMessage[]
+  invitations SupportGroupInvitation[]
 
   @@map("support_groups")
 }
@@ -131,4 +133,19 @@ model SupportGroupMessage {
   supportGroup SupportGroup @relation(fields: [supportGroupId], references: [id])
 
   @@map("support_group_messages")
+}
+
+model SupportGroupInvitation {
+  id             String  @id @default(cuid())
+  userId         String
+  supportGroupId String
+  status         String @default("pending") // "pending", "accepted", "declined"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+ user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supportGroup SupportGroup @relation(fields: [supportGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, supportGroupId])
+  @@map("support_group_invitations")
 }
