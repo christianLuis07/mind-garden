@@ -1,14 +1,12 @@
-// src/app/community/page.tsx
 "use client";
 
 import { useState } from "react";
 import { GroupsList } from "@/components/community/groups-list";
 import { GroupChat } from "@/components/community/group-chat";
-import { CreateGroupForm } from "@/components/community/create-group-form";
 import { SupportGroup } from "@/types/community";
 import { Users, MessageCircle, Users2 } from "lucide-react";
 
-type ViewMode = "list" | "chat" | "create";
+type ViewMode = "list" | "chat";
 
 export default function CommunityPage() {
   const [currentView, setCurrentView] = useState<ViewMode>("list");
@@ -19,17 +17,9 @@ export default function CommunityPage() {
     setCurrentView("chat");
   };
 
-  const handleCreateGroup = () => {
-    setCurrentView("create");
-  };
-
   const handleBackToList = () => {
     setCurrentView("list");
     setSelectedGroup(null);
-  };
-
-  const handleCreateSuccess = () => {
-    setCurrentView("list");
   };
 
   return (
@@ -52,67 +42,62 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">50+</p>
-                <p className="text-sm text-gray-600">Anggota Komunitas</p>
+        {/* Stats - Hanya muncul di tampilan List */}
+        {currentView === "list" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">50+</p>
+                  <p className="text-sm text-gray-600">Anggota Komunitas</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <MessageCircle className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">12</p>
-                <p className="text-sm text-gray-600">Grup Dukungan</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MessageCircle className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">12</p>
+                  <p className="text-sm text-gray-600">Grup Dukungan</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users2 className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">24/7</p>
-                <p className="text-sm text-gray-600">Dukungan Tersedia</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Users2 className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">24/7</p>
+                  <p className="text-sm text-gray-600">Dukungan Tersedia</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="space-y-6">
           {currentView === "list" && (
-            <GroupsList
-              onCreateGroup={handleCreateGroup}
-              onViewGroup={handleViewGroup}
-            />
+            // PERBAIKAN DI SINI:
+            // 1. Menggunakan prop 'onSelectGroup' sesuai definisi di GroupsList
+            // 2. Menghapus 'onCreateGroup' karena sudah ditangani internal GroupsList
+            <GroupsList onSelectGroup={handleViewGroup} />
           )}
 
           {currentView === "chat" && selectedGroup && (
             <GroupChat group={selectedGroup} onBack={handleBackToList} />
           )}
-
-          {currentView === "create" && (
-            <CreateGroupForm
-              onSuccess={handleCreateSuccess}
-              onCancel={handleBackToList}
-            />
-          )}
         </div>
 
-        {/* Community Guidelines */}
+        {/* Community Guidelines - Hanya muncul di list */}
         {currentView === "list" && (
           <div className="mt-12 bg-blue-50 border border-blue-200 rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">

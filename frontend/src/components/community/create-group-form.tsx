@@ -7,10 +7,10 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Card, CardContent } from "../ui/card";
 import { communityAPI } from "@/lib/community-api";
-import { CreateSupportGroupData } from "@/types/community";
+import { CreateSupportGroupData, SupportGroup } from "@/types/community";
 
 interface CreateGroupFormProps {
-  onSuccess: () => void;
+  onSuccess: (group: SupportGroup) => void;
   onCancel: () => void;
 }
 
@@ -32,7 +32,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
       const response = await communityAPI.createSupportGroup(formData);
 
       if (response.data.success) {
-        onSuccess();
+        onSuccess(response.data.data.group);
       }
     } catch (error) {
       console.error("Gagal membuat group:", error);
