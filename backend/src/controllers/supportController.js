@@ -1,4 +1,3 @@
-// src/controllers/supportController.js
 const supportService = require("../services/supportService");
 const { successResponse, errorResponse } = require("../utils/response");
 
@@ -110,6 +109,19 @@ const getUserSupportGroups = async (req, res, next) => {
   }
 };
 
+const inviteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+
+    const result = await supportService.inviteUser(id, email, req.user.id);
+
+    successResponse(res, result.message, null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createSupportGroup,
   getSupportGroups,
@@ -119,4 +131,5 @@ module.exports = {
   getGroupMessages,
   createGroupMessage,
   getUserSupportGroups,
+  inviteUser,
 };
