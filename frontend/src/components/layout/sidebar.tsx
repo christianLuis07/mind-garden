@@ -25,7 +25,7 @@ const navigation = [
   { name: "Pantau Mood", href: "/dashboard/mood", icon: Smile },
   { name: "Jurnal", href: "/dashboard/journal", icon: BookOpen },
   { name: "Latihan Nafas", href: "/dashboard/breathing", icon: Wind },
-  { name: "Dukungan", href: "/dashboard/support", icon: Users },
+  { name: "Dukungan", href: "/dashboard/community", icon: Users },
   { name: "Pengaturan", href: "/dashboard/settings", icon: Settings },
 ];
 
