@@ -98,6 +98,13 @@ export const communityAPI = {
       };
     }>(`/community/groups/${groupId}/messages`, { params }),
 
+  // invite user
+  inviteUser: (groupId: string, email: string) =>
+    api.post<{ success: boolean; message: string }>(
+      `/community/groups/${groupId}/invite`,
+      { email }
+    ),
+
   // kirim pesan
   sendMessage: (groupId: string, data: SendMessageData) =>
     api.post<{

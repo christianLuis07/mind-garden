@@ -9,6 +9,10 @@ export interface SupportGroup {
   memberCount?: number;
   isMember?: boolean;
   userRole?: "member" | "moderator" | "admin";
+  _count?: {
+    members: number;
+    messages: number;
+  };
 }
 
 export interface SupportGroupMember {
