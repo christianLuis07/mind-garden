@@ -13,7 +13,7 @@ router.use("/email", emailRoutes);
 router.use("/mood", moodRoutes);
 router.use("/journal", journalRoutes);
 router.use("/breathing", breathingRoutes);
-router.use("/support", supportRoutes);
+router.use("/community", supportRoutes);
 
 router.get("/health", (req, res) => {
   res.status(200).json({
