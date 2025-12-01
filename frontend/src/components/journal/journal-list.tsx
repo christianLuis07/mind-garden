@@ -1,4 +1,3 @@
-// src/components/journal/journal-list.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,6 +12,7 @@ import {
   Trash2,
   Plus,
   Clock,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +23,19 @@ import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import { toast } from "sonner";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 interface JournalListProps {
   onEdit?: (entry: JournalEntry) => void;
   onNewEntry?: () => void;
+  onView?: (entry: JournalEntry) => void;
   showPublic?: boolean;
 }
 
 export function JournalList({
   onEdit,
   onNewEntry,
+  onView,
   showPublic = false,
 }: JournalListProps) {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -49,7 +53,6 @@ export function JournalList({
     try {
       setLoading(true);
       const params: any = {};
-
       if (search) params.search = search;
       if (selectedTags.length > 0) params.tags = selectedTags;
       if (dateRange.start) params.startDate = dateRange.start;
@@ -59,23 +62,19 @@ export function JournalList({
         ? await journalAPI.getPublicJournals(params)
         : await journalAPI.getJournalEntries(params);
 
-      // PERBAIKAN: Akses response.data terlebih dahulu
       if (response.data.success) {
         setEntries(response.data.data.entries);
-
-        // PERBAIKAN: Gunakan optional chaining dan type assertion
         const tags = Array.from(
           new Set(
             response.data.data.entries.flatMap(
-              (entry: JournalEntry) => entry.tags || [] // Handle undefined tags
+              (entry: JournalEntry) => entry.tags || []
             )
           )
-        ) as string[]; // Type assertion untuk string[]
-
+        ) as string[];
         setAllTags(tags);
       }
     } catch (error) {
-      toast.error("Failed to load entries");
+      toast.error("Gagal memuat entri jurnal");
     } finally {
       setLoading(false);
     }
@@ -86,27 +85,29 @@ export function JournalList({
   }, [search, selectedTags, dateRange, showPublic]);
 
   const handleDelete = async (entry: JournalEntry) => {
-    if (!confirm("Are you sure you want to delete this journal entry?")) {
-      return;
-    }
-
+    if (!confirm("Apakah Anda yakin ingin menghapus entri ini?")) return;
     try {
       const response = await journalAPI.deleteJournalEntry(entry.id);
-      // PERBAIKAN: Akses response.data
       if (response.data.success) {
-        toast.success("Journal entry deleted successfully");
+        toast.success("Jurnal berhasil dihapus");
         fetchEntries();
       }
     } catch (error) {
-      toast.error("Failed to delete entry");
+      toast.error("Gagal menghapus entri");
     }
   };
 
-  const handleTagToggle = (tag: string) => {
+  const getImageUrl = (path: string) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${API_BASE_URL}${cleanPath}`;
+  };
+
+  const handleTagToggle = (tag: string) =>
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
-  };
 
   const clearFilters = () => {
     setSearch("");
@@ -114,20 +115,19 @@ export function JournalList({
     setDateRange({ start: "", end: "" });
   };
 
-  const truncateContent = (html: string, maxLength: number = 150) => {
+  const truncateContent = (html: string, maxLength: number = 100) => {
     const text = html.replace(/<[^>]*>/g, "");
     return text.length > maxLength
       ? text.substring(0, maxLength) + "..."
       : text;
   };
 
-  if (loading && entries.length === 0) {
+  if (loading && entries.length === 0)
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
     );
-  }
 
   return (
     <div className="space-y-6">
@@ -142,32 +142,29 @@ export function JournalList({
               : "Renungkan kembali pikiran dan pengalamanmu"}
           </p>
         </div>
-
         {!showPublic && onNewEntry && (
           <Button
             onClick={onNewEntry}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Entries Baru
+            Entri Baru
           </Button>
         )}
       </div>
 
-      {/* Search and Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Mencari Entries..."
+                placeholder="Cari entri..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
               />
             </div>
-
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
@@ -175,7 +172,7 @@ export function JournalList({
                 className="flex items-center space-x-2"
               >
                 <Filter className="w-4 h-4" />
-                <span>Filters</span>
+                <span>Filter</span>
                 {(selectedTags.length > 0 ||
                   dateRange.start ||
                   dateRange.end) && (
@@ -186,7 +183,6 @@ export function JournalList({
                   </span>
                 )}
               </Button>
-
               {(selectedTags.length > 0 ||
                 dateRange.start ||
                 dateRange.end) && (
@@ -195,22 +191,20 @@ export function JournalList({
                   onClick={clearFilters}
                   className="text-sm"
                 >
-                  Bersihkan Semua
+                  Hapus Filter
                 </Button>
               )}
             </div>
-
             {showFilters && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
                     <Calendar className="w-4 h-4" />
-                    <span>Date Range</span>
+                    <span>Rentang Tanggal</span>
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
-                      placeholder="Start Date"
                       value={dateRange.start}
                       onChange={(e) =>
                         setDateRange((prev) => ({
@@ -221,7 +215,6 @@ export function JournalList({
                     />
                     <Input
                       type="date"
-                      placeholder="End Date"
                       value={dateRange.end}
                       onChange={(e) =>
                         setDateRange((prev) => ({
@@ -232,12 +225,11 @@ export function JournalList({
                     />
                   </div>
                 </div>
-
                 {allTags.length > 0 && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
                       <Tag className="w-4 h-4" />
-                      <span>Tags</span>
+                      <span>Tag</span>
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {allTags.map((tag) => (
@@ -262,25 +254,24 @@ export function JournalList({
         </CardContent>
       </Card>
 
-      {/* Entries List */}
       {entries.length === 0 ? (
         <Card>
-          <CardContent className="p-8 text-center">
-            <div className="text-gray-400 mb-4">
-              <Edit className="w-16 h-16 mx-auto" />
+          <CardContent className="p-12 text-center text-gray-500">
+            <div className="flex justify-center mb-4">
+              <Edit className="w-16 h-16 text-gray-300" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No entries found
+              Tidak ada entri ditemukan
             </h3>
             <p className="text-gray-600 mb-4">
               {search ||
               selectedTags.length > 0 ||
               dateRange.start ||
               dateRange.end
-                ? "Try adjusting your search or filters"
+                ? "Coba sesuaikan pencarian atau filter Anda"
                 : showPublic
-                ? "No public entries available yet"
-                : "Start writing your first journal entry"}
+                ? "Belum ada entri publik"
+                : "Mulai tulis entri jurnal pertamamu"}
             </p>
             {!showPublic && onNewEntry && (
               <Button
@@ -288,123 +279,128 @@ export function JournalList({
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Write Your First Entry
+                Tulis Entri Pertama
               </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        // --- PERBAIKAN GRID DI SINI ---
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {entries.map((entry) => (
-            <Card key={entry.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 text-lg mb-1">
-                          {entry.title || "Untitled Entry"}
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                          <div className="flex items-center space-x-1">
-                            <Clock className="w-3 h-3" />
-                            <span>
-                              {formatDistanceToNow(new Date(entry.createdAt), {
-                                addSuffix: true,
-                                locale: id,
-                              })}
-                            </span>
-                          </div>
-
-                          {entry.isPublic ? (
-                            <span className="px-2 py-1 text-xs rounded-full border bg-blue-100 text-blue-800 border-blue-300 flex items-center space-x-1">
-                              <Eye className="w-3 h-3" />
-                              <span>Public</span>
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs rounded-full border bg-gray-100 text-gray-700 border-gray-300 flex items-center space-x-1">
-                              <EyeOff className="w-3 h-3" />
-                              <span>Private</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 line-clamp-3">
-                      {truncateContent(entry.content)}
-                    </p>
-
-                    {/* PERBAIKAN: Gunakan optional chaining untuk tags */}
-                    {entry.tags && entry.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {entry.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full border border-gray-300"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* PERBAIKAN: Gunakan optional chaining untuk images */}
-                    {entry.images && entry.images.length > 0 && (
-                      <div className="flex space-x-2">
-                        {entry.images.slice(0, 3).map((image, index) => (
-                          <img
-                            key={index}
-                            src={image}
-                            alt={`Journal image ${index + 1}`}
-                            className="w-16 h-16 object-cover rounded border border-gray-200"
-                          />
-                        ))}
-                        {entry.images.length > 3 && (
-                          <div className="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-xs text-gray-500">
-                            +{entry.images.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    )}
+            <Card
+              key={entry.id}
+              className="hover:shadow-lg transition-all border-gray-200 group flex flex-col h-full overflow-hidden"
+            >
+              {/* GAMBAR HEADER - FIXED ASPECT RATIO */}
+              <div className="relative h-48 w-full bg-gray-100 overflow-hidden shrink-0">
+                {entry.images && entry.images.length > 0 ? (
+                  <img
+                    src={getImageUrl(entry.images[0])}
+                    alt={entry.title || "Jurnal"}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://placehold.co/400x300?text=No+Image";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                    <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
                   </div>
-
-                  {!showPublic && (
-                    <div className="flex space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit?.(entry)}
-                        className="flex items-center space-x-1"
-                      >
-                        <Edit className="w-3 h-3" />
-                        <span>Edit</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(entry)}
-                        className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Delete</span>
-                      </Button>
-                    </div>
-                  )}
+                )}
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium shadow-sm">
+                  {formatDistanceToNow(new Date(entry.createdAt), {
+                    addSuffix: true,
+                    locale: id,
+                  })}
                 </div>
+              </div>
 
+              <CardContent className="p-5 flex flex-col flex-1">
+                {/* Header User (Jika Public) */}
                 {showPublic && entry.user && (
-                  <div className="flex items-center space-x-2 mt-4 pt-4 border-t border-gray-200">
-                    <img
-                      src={entry.user.avatar}
-                      alt={entry.user.name}
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <span className="text-sm text-gray-600">
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+                    {entry.user.avatar ? (
+                      <img
+                        src={getImageUrl(entry.user.avatar)}
+                        alt={entry.user.name}
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold">
+                        {(entry.user.name || "U").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-xs text-gray-600 font-medium truncate">
                       {entry.user.name}
                     </span>
                   </div>
                 )}
+
+                <h3
+                  className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 cursor-pointer hover:text-green-600"
+                  onClick={() => onView?.(entry)}
+                >
+                  {entry.title || "Tanpa Judul"}
+                </h3>
+
+                {/* Content Preview */}
+                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4 flex-1">
+                  {truncateContent(entry.content)}
+                </p>
+
+                {/* Tags */}
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {entry.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-md"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                    {entry.tags.length > 3 && (
+                      <span className="text-xs text-gray-400">
+                        +{entry.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Footer Buttons */}
+                <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-green-600 hover:text-green-700 hover:bg-green-50 px-2 h-8 text-xs font-medium"
+                    onClick={() => onView?.(entry)}
+                  >
+                    Baca <Eye className="w-3 h-3 ml-1.5" />
+                  </Button>
+
+                  {!showPublic && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                        onClick={() => onEdit?.(entry)}
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-500 hover:text-red-600"
+                        onClick={() => handleDelete(entry)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
