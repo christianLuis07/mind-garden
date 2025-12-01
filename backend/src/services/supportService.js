@@ -72,25 +72,47 @@ class SupportService {
   }
 
   async getSupportGroupById(groupId, userId = null) {
-    const group = await this.getGroupWithDetails(groupId);
+    const group = await prisma.supportGroup.findUnique({
+      where: { id: groupId },
+      include: {
+        members: {
+          include: {
+            user: { select: { id: true, name: true, avatar: true } },
+          },
+        },
+        // cek apakah user punya undangan
+        invitations: {
+          where: { userId, status: "pending" },
+        },
+        _count: {
+          select: { members: true, messages: true },
+        },
+      },
+    });
 
     if (!group) {
       throw new Error("Grup dukungan tidak ditemukan");
     }
 
-    // Periksa apakah pengguna dapat mengakses grup privat
+    // Logic akses private group
     if (!group.isPublic) {
       if (!userId) {
-        throw new Error("Autentikasi diperlukan untuk mengakses grup privat");
+        throw new Error("Kamu tidak memiliki akses ke grup privat ini");
       }
 
       const isMember = group.members.some((member) => member.userId === userId);
-      if (!isMember) {
+      const hasInvitation = group.invitations.length > 0;
+
+      if (!isMember && !hasInvitation) {
         throw new Error("Kamu bukan anggota dari grup privat ini");
       }
     }
 
-    return group;
+    // Menambahkan helper untuk frontend
+    const isMember = group.members.some((m) => m.userId === userId);
+    const hasPendingInvite = group.invitations.length > 0;
+
+    return { ...group, isMember, hasPendingInvite };
   }
 
   async joinSupportGroup(groupId, userId) {
@@ -108,9 +130,25 @@ class SupportService {
     }
 
     if (!group.isPublic) {
-      throw new Error(
-        "Ini adalah grup privat. Kamu memerlukan undangan untuk bergabung."
-      );
+      // Cek undangan
+      const invitation = await prisma.supportGroupInvitation.findFirst({
+        where: {
+          userId,
+          supportGroupId: groupId,
+          status: "pending",
+        },
+      });
+      if (!invitation) {
+        throw new Error(
+          "ini adalah grup privat. Kamu memerlukan undangan untuk bergabung."
+        );
+      }
+
+      // update status undangan menjadi accepted
+      await prisma.supportGroupInvitation.update({
+        where: { id: invitation.id },
+        data: { status: "accepted" },
+      });
     }
 
     // Periksa apakah grup sudah penuh
@@ -150,6 +188,68 @@ class SupportService {
     });
 
     return member;
+  }
+
+  async inviteUser(groupId, email, requesterId) {
+    // cek apakah grup ada atau tidak
+    const group = await prisma.supportGroup.findUnique({
+      where: { id: groupId },
+    });
+    if (!group) {
+      throw new Error("Grup dukungan tidak ditemukan");
+    }
+
+    // Cek apakah pengundang adalah member grup tersebut
+    const requester = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: { userId: requesterId, supportGroupId: groupId },
+      },
+    });
+    if (!requester) {
+      throw new Error("Hanya anggota grup yang dapat mengundang pengguna lain");
+    }
+
+    // cari user yang ingin diundang
+    const userToInvite = await prisma.user.findUnique({ where: { email } });
+    if (!userToInvite) {
+      throw new Error("Pengguna dengan email tersebut tidak ditemukan");
+    }
+
+    // cek apakah user sudah menjadi member
+    const isAlreadyMember = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: {
+          userId: userToInvite.id,
+          supportGroupId: groupId,
+        },
+      },
+    });
+    if (isAlreadyMember) {
+      throw new Error("Pengguna tersebut sudah menjadi anggota grup");
+    }
+
+    // cek apakah sudah ada undangan yang pending
+    const existingInvite = await prisma.supportGroupInvitation.findFirst({
+      where: {
+        userId: userToInvite.id,
+        supportGroupId: groupId,
+        status: "pending",
+      },
+    });
+    if (existingInvite) {
+      throw new Error("Pengguna tersebut sudah diundang ke grup ini");
+    }
+
+    // buat undangan
+    await prisma.supportGroupInvitation.create({
+      data: {
+        userId: userToInvite.id,
+        supportGroupId: groupId,
+        status: "pending",
+      },
+    });
+
+    return { message: "Undangan berhasil dikirim" };
   }
 
   async leaveSupportGroup(groupId, userId) {
@@ -353,6 +453,83 @@ class SupportService {
     }
 
     return true;
+  }
+
+  async promoteMember(groupId, targetUserId, requesterId) {
+    // cek apakah requester adalah admin
+    const requester = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: { userId: requesterId, supportGroupId: groupId },
+      },
+    });
+
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Hanya admin yang dapat mempromosikan anggota");
+    }
+
+    // update member target menjadi admin
+    const updatedMember = await prisma.supportGroupMember.update({
+      where: {
+        userId_supportGroupId: {
+          userId: targetUserId,
+          supportGroupId: groupId,
+        },
+      },
+      data: { role: "admin" },
+    });
+
+    return updatedMember;
+  }
+
+  async removeMember(groupId, targetUserId, requesterId) {
+    // cek Requester adalah admin
+    const requester = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: { userId: requesterId, supportGroupId: groupId },
+      },
+    });
+
+    if (!requester || requester.role !== "admin") {
+      throw new Error("Hanya admin yang dapat menghapus anggota");
+    }
+
+    // tidak boleh kick sesama admin
+    const target = await prisma.supportGroupMember.findUnique({
+      where: {
+        userId_supportGroupId: {
+          userId: targetUserId,
+          supportGroupId: groupId,
+        },
+      },
+    });
+
+    if (target && target.role === "admin") {
+      throw new Error("Tidak dapat menghapus sesama admin");
+    }
+
+    // hapus member
+    await prisma.supportGroupMember.delete({
+      where: {
+        userId_supportGroupId: {
+          userId: targetUserId,
+          supportGroupId: groupId,
+        },
+      },
+    });
+
+    return { message: "Anggota berhasil dihapus dari grup" };
+  }
+
+  async getGroupMembers(groupId) {
+    return await prisma.supportGroupMember.findMany({
+      where: { supportGroupId: groupId },
+      include: {
+        user: {
+          select: { id: true, name: true, avatar: true, email: true },
+        },
+      },
+      orderBy: { joinedAt: "asc" },
+    });
   }
 }
 

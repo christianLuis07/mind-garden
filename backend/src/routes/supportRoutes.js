@@ -9,6 +9,10 @@ const {
   getGroupMessages,
   createGroupMessage,
   getUserSupportGroups,
+  inviteUser,
+  promoteMember,
+  removeMember,
+  getGroupMembers,
 } = require("../controllers/supportController");
 const { auth, optionalAuth } = require("../middleware/auth");
 
@@ -27,5 +31,9 @@ router.post("/groups/:id/join", joinSupportGroup);
 router.post("/groups/:id/leave", leaveSupportGroup);
 router.get("/groups/:id/messages", getGroupMessages);
 router.post("/groups/:id/messages", createGroupMessage);
+router.post("/groups/:id/invite", inviteUser);
+router.get("/groups/:id/members", getGroupMembers);
+router.post("/groups/:id/members/promote", promoteMember);
+router.delete("/groups/:id/members/:userId", removeMember);
 
 module.exports = router;

@@ -1,26 +1,26 @@
-// src/app/community/page.tsx
 "use client";
 
 import { useState } from "react";
 import { GroupsList } from "@/components/community/groups-list";
 import { GroupChat } from "@/components/community/group-chat";
-import { CreateGroupForm } from "@/components/community/create-group-form";
 import { SupportGroup } from "@/types/community";
 import { Users, MessageCircle, Users2 } from "lucide-react";
 
-type ViewMode = "list" | "chat" | "create";
+type ViewMode = "list" | "chat";
 
 export default function CommunityPage() {
   const [currentView, setCurrentView] = useState<ViewMode>("list");
   const [selectedGroup, setSelectedGroup] = useState<SupportGroup | null>(null);
 
+  // State untuk Statistik Dinamis
+  const [stats, setStats] = useState({
+    totalGroups: 0,
+    totalMembers: 0,
+  });
+
   const handleViewGroup = (group: SupportGroup) => {
     setSelectedGroup(group);
     setCurrentView("chat");
-  };
-
-  const handleCreateGroup = () => {
-    setCurrentView("create");
   };
 
   const handleBackToList = () => {
@@ -28,8 +28,12 @@ export default function CommunityPage() {
     setSelectedGroup(null);
   };
 
-  const handleCreateSuccess = () => {
-    setCurrentView("list");
+  // Callback untuk update statistik dari GroupsList
+  const handleStatsUpdate = (newStats: {
+    totalGroups: number;
+    totalMembers: number;
+  }) => {
+    setStats(newStats);
   };
 
   return (
@@ -52,63 +56,64 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">50+</p>
-                <p className="text-sm text-gray-600">Anggota Komunitas</p>
+        {/* Stats - Hanya muncul di tampilan List */}
+        {currentView === "list" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm border transition-all hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  {/* Gunakan stats.totalMembers */}
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalMembers > 0 ? stats.totalMembers : "..."}
+                  </p>
+                  <p className="text-sm text-gray-600">Anggota Komunitas</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <MessageCircle className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">12</p>
-                <p className="text-sm text-gray-600">Grup Dukungan</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border transition-all hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MessageCircle className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  {/* Gunakan stats.totalGroups */}
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalGroups > 0 ? stats.totalGroups : "..."}
+                  </p>
+                  <p className="text-sm text-gray-600">Grup Dukungan</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users2 className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">24/7</p>
-                <p className="text-sm text-gray-600">Dukungan Tersedia</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border transition-all hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Users2 className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">24/7</p>
+                  <p className="text-sm text-gray-600">Dukungan Tersedia</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="space-y-6">
           {currentView === "list" && (
             <GroupsList
-              onCreateGroup={handleCreateGroup}
-              onViewGroup={handleViewGroup}
+              onSelectGroup={handleViewGroup}
+              onStatsUpdate={handleStatsUpdate} // Pass callback disini
             />
           )}
 
           {currentView === "chat" && selectedGroup && (
             <GroupChat group={selectedGroup} onBack={handleBackToList} />
-          )}
-
-          {currentView === "create" && (
-            <CreateGroupForm
-              onSuccess={handleCreateSuccess}
-              onCancel={handleBackToList}
-            />
           )}
         </div>
 

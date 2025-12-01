@@ -1,4 +1,3 @@
-// src/controllers/supportController.js
 const supportService = require("../services/supportService");
 const { successResponse, errorResponse } = require("../utils/response");
 
@@ -92,6 +91,16 @@ const createGroupMessage = async (req, res, next) => {
       req.body
     );
 
+    const io = req.app.get("io");
+
+    if (io) {
+      io.to(id).emit("receive_message", message);
+
+      console.log(`Socket.io: pesan dikirim ke group ${id}`);
+    } else {
+      console.error("Socket.io instance not found in app settings");
+    }
+
     successResponse(res, "Message sent successfully", { message }, 201);
   } catch (error) {
     next(error);
@@ -110,6 +119,57 @@ const getUserSupportGroups = async (req, res, next) => {
   }
 };
 
+const inviteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+
+    const result = await supportService.inviteUser(id, email, req.user.id);
+
+    successResponse(res, result.message, null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const promoteMember = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    await supportService.promoteMember(id, userId, req.user.id);
+    successResponse(res, "Member promoted to admin successfully", null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeMember = async (req, res, next) => {
+  try {
+    const { id, userId } = req.params;
+
+    await supportService.removeMember(id, userId, req.user.id);
+    successResponse(res, "Member removed from group successfully", null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getGroupMembers = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const members = await supportService.getGroupMembers(id, req.user.id);
+    successResponse(
+      res,
+      "Group members retrieved successfully",
+      { members },
+      200
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createSupportGroup,
   getSupportGroups,
@@ -119,4 +179,8 @@ module.exports = {
   getGroupMessages,
   createGroupMessage,
   getUserSupportGroups,
+  inviteUser,
+  promoteMember,
+  removeMember,
+  getGroupMembers,
 };

@@ -49,12 +49,6 @@ export const communityAPI = {
       message: string;
     }>(`/community/groups/${groupId}/join`),
 
-  // keluar support group
-  leaveSupportGroup: (groupId: string) =>
-    api.post<{ success: boolean; message: string }>(
-      `/community/groups/${groupId}/leave`
-    ),
-
   // ambil group members
   getGroupMembers: (
     groupId: string,
@@ -67,12 +61,6 @@ export const communityAPI = {
       success: boolean;
       data: {
         members: SupportGroupMember[];
-        pagination: {
-          page: number;
-          limit: number;
-          total: number;
-          pages: number;
-        };
       };
     }>(`/community/groups/${groupId}/members`, { params }),
 
@@ -98,6 +86,13 @@ export const communityAPI = {
       };
     }>(`/community/groups/${groupId}/messages`, { params }),
 
+  // invite user
+  inviteUser: (groupId: string, email: string) =>
+    api.post<{ success: boolean; message: string }>(
+      `/community/groups/${groupId}/invite`,
+      { email }
+    ),
+
   // kirim pesan
   sendMessage: (groupId: string, data: SendMessageData) =>
     api.post<{
@@ -109,5 +104,24 @@ export const communityAPI = {
   deleteMessage: (groupId: string, messageId: string) =>
     api.delete<{ success: boolean; message: string }>(
       `/community/groups/${groupId}/messages/${messageId}`
+    ),
+
+  // promote admin
+  promoteMember: (groupId: string, userId: string) =>
+    api.post<{ success: boolean; message: string }>(
+      `/community/groups/${groupId}/members/promote`,
+      { userId }
+    ),
+
+  // kick member
+  removeMember: (groupId: string, userId: string) =>
+    api.delete<{ success: boolean; message: string }>(
+      `/community/groups/${groupId}/members/${userId}`
+    ),
+
+  // keluar groups
+  leaveSupportGroup: (groupId: string) =>
+    api.post<{ success: boolean; message: string }>(
+      `/community/groups/${groupId}/leave`
     ),
 };
