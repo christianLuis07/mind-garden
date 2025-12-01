@@ -25,7 +25,9 @@ export const journalAPI = {
       success: boolean;
       message: string;
       data: { journalEntry: JournalEntry };
-    }>("/journal", formData);
+    }>("/journal", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
 
   // ambil entries jurnal dengan pagination dan filter
@@ -90,7 +92,10 @@ export const journalAPI = {
     }
     return api.put<{ success: boolean; data: { journalEntry: JournalEntry } }>(
       `/journal/${id}`,
-      formData
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
     );
   },
 
