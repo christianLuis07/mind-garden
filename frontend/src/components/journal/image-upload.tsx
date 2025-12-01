@@ -1,137 +1,127 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { Button } from "../ui/button";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 interface ImageUploadProps {
-  onImagesChange: (files: File[]) => void;
-  existingImages?: string[];
-  onImageRemove?: (imageIndex: number) => void;
+  newImages: File[];
+  existingImages: string[];
+  onNewImagesChange: (files: File[]) => void;
+  onRemoveNew: (index: number) => void;
+  onRemoveExisting: (index: number) => void;
   maxImages?: number;
 }
 
 export function ImageUpload({
-  onImagesChange,
-  existingImages = [],
-  onImageRemove,
+  newImages,
+  existingImages,
+  onNewImagesChange,
+  onRemoveNew,
+  onRemoveExisting,
   maxImages = 5,
 }: ImageUploadProps) {
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-
-    if (files.length + existingImages.length + previewUrls.length > maxImages) {
-      alert(`Kamu hanya bisa mengunggah gambar maksimal ${maxImages}`);
-      return;
+    if (event.target.files) {
+      const filesArray = Array.from(event.target.files);
+      if (
+        newImages.length + existingImages.length + filesArray.length >
+        maxImages
+      ) {
+        alert(`Maksimal ${maxImages} gambar`);
+        return;
+      }
+      onNewImagesChange([...newImages, ...filesArray]);
     }
-
-    // buat preivew URLs
-    const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
-    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
-
-    // Convert Filelist ke array dan lewati melalui parent
-    onImagesChange(files);
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removePreviewImage = (index: number) => {
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  // Helper untuk menampilkan gambar dari server
+  const getImageUrl = (path: string) => {
+    if (path.startsWith("http")) return path;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${API_BASE_URL}${cleanPath}`;
   };
-
-  const removeExistingImage = (index: number) => {
-    if (onImageRemove) {
-      onImageRemove(index);
-    }
-  };
-
-  const totalImages = existingImages.length + previewUrls.length;
-  const canUploadMore = totalImages < maxImages;
 
   return (
-    <div className="space-y-4">
-      {/* Upload Button */}
-      <div className="flex items-center justify-between">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileSelect}
-            disabled={!canUploadMore}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant={"outline"}
-            disabled={!canUploadMore}
-            className="flex items-center space-x-2"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="w-4 h-4">
-              <span>Tambah Gambar</span>
-            </Upload>
-          </Button>
-        </label>
-        <span className="text-sm text-gray-500">
-          {totalImages} / (maxImages) gambar
-        </span>
+    <div className="space-y-4 mt-2">
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+      >
+        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+        <p className="text-sm text-gray-500">Klik untuk upload gambar</p>
+        <p className="text-xs text-gray-400 mt-1">
+          Maksimal {maxImages} gambar
+        </p>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          accept="image/*"
+          multiple
+          className="hidden"
+        />
       </div>
 
-      {/* Image Previews */}
-      {(existingImages.length > 0 || previewUrls.length > 0) && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* Existing Images */}
-          {existingImages.map((imageUrl, index) => (
-            <div key={`sudah ada-${index}`} className="relative group">
+      {(existingImages.length > 0 || newImages.length > 0) && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Gambar Lama (Dari Server) */}
+          {existingImages.map((src, index) => (
+            <div
+              key={`existing-${index}`}
+              className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200"
+            >
               <img
-                src={imageUrl}
-                alt={`gambar Jurnal ${index + 1}`}
-                className="w-full h-24 object-cover rounded-lg border border-gray-200"
-              />
-              {onImageRemove && (
-                <button
-                  type="button"
-                  onClick={() => removeExistingImage(index)}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-          ))}
-          {/* New Image Previews */}
-          {previewUrls.map((previewUrl, index) => (
-            <div key={`cuplikan-${index}`} className="relative group">
-              <img
-                src={previewUrl}
-                alt={`Cuplikan ${index + 1}`}
-                className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                src={getImageUrl(src)}
+                alt="Existing"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "https://placehold.co/100x100?text=Error";
+                }}
               />
               <button
                 type="button"
-                onClick={() => removePreviewImage(index)}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onRemoveExisting(index)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X className="w-3 h-3" />
               </button>
+              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-2 py-1 text-center">
+                Tersimpan
+              </div>
+            </div>
+          ))}
+
+          {/* Gambar Baru (Preview Lokal) */}
+          {newImages.map((file, index) => (
+            <div
+              key={`new-${index}`}
+              className="relative group aspect-square rounded-lg overflow-hidden border border-green-200"
+            >
+              <img
+                src={URL.createObjectURL(file)}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => onRemoveNew(index)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-3 h-3" />
+              </button>
+              <div className="absolute bottom-0 left-0 right-0 bg-green-500/80 text-white text-[10px] px-2 py-1 text-center">
+                Baru
+              </div>
             </div>
           ))}
         </div>
-      )}
-      {/* Helper Text */}
-      {!canUploadMore && (
-        <p className="text-sm text-amber-600">
-          Maksimal {maxImages} gambar di ijinkan. Hapus gambar untuk menambah
-          gambar lainnya.
-        </p>
       )}
     </div>
   );

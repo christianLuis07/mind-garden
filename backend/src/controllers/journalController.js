@@ -1,4 +1,3 @@
-// src/controllers/journalController.js
 const journalService = require("../services/journalService");
 const { successResponse, errorResponse } = require("../utils/response");
 
@@ -6,7 +5,8 @@ const createJournalEntry = async (req, res, next) => {
   try {
     const journalEntry = await journalService.createJournalEntry(
       req.user.id,
-      req.body
+      req.body,
+      req.files
     );
 
     successResponse(
@@ -69,7 +69,8 @@ const updateJournalEntry = async (req, res, next) => {
     const journalEntry = await journalService.updateJournalEntry(
       req.user.id,
       id,
-      req.body
+      req.body,
+      req.files
     );
 
     successResponse(res, "Journal entry updated successfully", {
@@ -86,6 +87,22 @@ const deleteJournalEntry = async (req, res, next) => {
     const result = await journalService.deleteJournalEntry(req.user.id, id);
 
     successResponse(res, result.message);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Controller baru untuk hapus gambar
+const deleteJournalImage = async (req, res, next) => {
+  try {
+    const { id, index } = req.params;
+    const result = await journalService.deleteJournalImage(
+      req.user.id,
+      id,
+      parseInt(index)
+    );
+
+    successResponse(res, result.message, { images: result.images });
   } catch (error) {
     next(error);
   }
@@ -114,5 +131,6 @@ module.exports = {
   getPublicJournalEntries,
   updateJournalEntry,
   deleteJournalEntry,
+  deleteJournalImage,
   getJournalAnalytics,
 };

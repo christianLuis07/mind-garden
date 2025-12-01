@@ -1,4 +1,3 @@
-// src/app/journal/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -14,21 +13,25 @@ type ViewMode = "list" | "editor" | "detail" | "analytics" | "community";
 
 export default function JournalPage() {
   const [currentView, setCurrentView] = useState<ViewMode>("list");
+  const [previousView, setPreviousView] = useState<ViewMode>("list");
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
 
   const handleNewEntry = () => {
     setEditingEntry(null);
+    setPreviousView(currentView);
     setCurrentView("editor");
   };
 
   const handleEditEntry = (entry: JournalEntry) => {
     setEditingEntry(entry);
+    setPreviousView(currentView);
     setCurrentView("editor");
   };
 
   const handleViewEntry = (entry: JournalEntry) => {
     setSelectedEntry(entry);
+    setPreviousView(currentView);
     setCurrentView("detail");
   };
 
@@ -38,12 +41,14 @@ export default function JournalPage() {
   };
 
   const handleEditorCancel = () => {
-    setCurrentView("list");
+    // Kembali ke view sebelumnya jika memungkinkan, atau default ke list
+    setCurrentView(previousView === "community" ? "community" : "list");
     setEditingEntry(null);
   };
 
   const handleBackToList = () => {
-    setCurrentView("list");
+    // Kembali ke list yang sesuai (Komunitas atau Jurnal Saya)
+    setCurrentView(previousView === "community" ? "community" : "list");
     setSelectedEntry(null);
   };
 
@@ -56,7 +61,6 @@ export default function JournalPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div className="flex items-center space-x-4 mb-4 lg:mb-0">
             <div className="p-3 bg-green-100 rounded-2xl">
@@ -78,38 +82,40 @@ export default function JournalPage() {
               className="bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Entries Baru
+              Entri Baru
             </Button>
           )}
         </div>
 
-        {/* Navigation */}
-        <div className="flex w-full gap-1 sm:gap-3 flex-col sm:flex-row mb-4">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-colors flex-1 justify-center ${
-                  currentView === item.id
-                    ? "bg-green-600 text-white"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Navigation - Sembunyikan saat di mode Editor atau Detail */}
+        {currentView !== "editor" && currentView !== "detail" && (
+          <div className="flex w-full gap-1 sm:gap-3 flex-col sm:flex-row mb-4">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentView(item.id)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-colors flex-1 justify-center ${
+                    currentView === item.id
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Content */}
         <div className="space-y-6">
           {currentView === "list" && (
             <JournalList
               onEdit={handleEditEntry}
               onNewEntry={handleNewEntry}
+              onView={handleViewEntry}
               showPublic={false}
             />
           )}
@@ -118,6 +124,7 @@ export default function JournalPage() {
             <JournalList
               onEdit={handleEditEntry}
               onNewEntry={handleNewEntry}
+              onView={handleViewEntry}
               showPublic={true}
             />
           )}
@@ -135,7 +142,7 @@ export default function JournalPage() {
               entryId={selectedEntry.id}
               onEdit={handleEditEntry}
               onBack={handleBackToList}
-              showActions={true}
+              showActions={previousView !== "community"}
             />
           )}
 

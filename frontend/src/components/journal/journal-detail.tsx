@@ -1,4 +1,3 @@
-// src/components/journal/journal-detail.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,9 +9,6 @@ import {
   EyeOff,
   Edit,
   Trash2,
-  Share,
-  Clock,
-  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { journalAPI } from "@/lib/journal-api";
@@ -21,6 +17,8 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { toast } from "sonner";
 import parse from "html-react-parser";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface JournalDetailProps {
   entryId: string;
@@ -43,12 +41,9 @@ export function JournalDetail({
     try {
       setLoading(true);
       const response = await journalAPI.getJournalEntry(entryId);
-
-      if (response.data.success) {
-        setEntry(response.data.data.journalEntry);
-      }
-    } catch (error) {
-      toast.error("gagal memuat jurnal entries");
+      if (response.data.success) setEntry(response.data.data.journalEntry);
+    } catch {
+      toast.error("Gagal memuat jurnal");
       onBack?.();
     } finally {
       setLoading(false);
@@ -56,233 +51,197 @@ export function JournalDetail({
   };
 
   useEffect(() => {
-    if (entryId) {
-      fetchEntry();
-    }
+    if (entryId) fetchEntry();
   }, [entryId]);
 
   const handleDelete = async () => {
-    if (
-      !entry ||
-      !confirm("Apakah kamu yakin ingin menghapus entri jurnal ini?")
-    ) {
-      return;
-    }
-
+    if (!entry || !confirm("Yakin hapus?")) return;
     try {
       setDeleting(true);
       await journalAPI.deleteJournalEntry(entry.id);
-      toast.success("Entri jurnal berhasil dihapus");
+      toast.success("Terhapus");
       onBack?.();
-    } catch (error) {
-      toast.error("Gagal menghapus entri jurnal");
+    } catch {
+      toast.error("Gagal hapus");
     } finally {
       setDeleting(false);
     }
   };
 
-  const handleShare = async () => {
-    if (!entry) return;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: entry.title || "Journal Entry",
-          text: entry.content.replace(/<[^>]*>/g, "").substring(0, 100),
-          url: window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success("tautan telah disalin");
-      }
-    } catch (error: any) {
-      throw new Error(error);
-    }
+  const getImageUrl = (path: string) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${API_BASE_URL}${cleanPath}`;
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
     );
-  }
-
-  if (!entry) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Entri tidak ditemukan
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Entri jurnal yang kamu cari tidak tersedia.
-        </p>
-        <Button onClick={onBack} variant="outline">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Jurnal
-        </Button>
-      </div>
-    );
-  }
+  if (!entry) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 pb-20 md:pb-0">
+      {/* HEADER ACTIONS: Stack vertikal di HP, Baris di Desktop */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3 md:space-x-4">
           <Button
             variant="outline"
             onClick={onBack}
+            size="sm"
             className="flex items-center space-x-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span>Kembali</span>
           </Button>
-          <div className="h-6 border-l border-gray-300" />
-          <h1 className="text-2xl font-bold text-gray-900">Entries Jurnal</h1>
+          <div className="h-6 border-l border-gray-300 hidden sm:block" />
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 line-clamp-1">
+            {showActions ? "Detail Jurnal" : "Baca Jurnal"}
+          </h1>
         </div>
 
         {showActions && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <Button
               variant="outline"
-              onClick={handleShare}
-              className="flex items-center space-x-2"
-            >
-              <Share className="w-4 h-4" />
-              <span>Bagikan</span>
-            </Button>
-            <Button
-              variant="outline"
+              size="sm"
               onClick={() => onEdit?.(entry)}
               className="flex items-center space-x-2"
             >
               <Edit className="w-4 h-4" />
-              <span>Edit</span>
+              <span className="hidden sm:inline">Edit</span>
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={handleDelete}
               disabled={deleting}
               className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50"
             >
-              {deleting ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              <span>Hapus</span>
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Hapus</span>
             </Button>
           </div>
         )}
       </div>
 
-      {/* Entry Card */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {/* Header with Metadata */}
-        <div className="border-b border-gray-200 p-6 bg-gray-50">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-            <div className="flex-1 space-y-3">
-              <h2 className="text-3xl font-bold text-gray-900">
-                {entry.title || "entries tidak memiliki judul"}
+      {/* CONTENT CARD */}
+      <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        {/* Meta Header */}
+        <div className="border-b border-gray-200 p-4 md:p-8 bg-gray-50/50">
+          <div className="flex flex-col gap-6">
+            <div className="space-y-3">
+              <h2 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight wrap-break-word">
+                {entry.title || "Tanpa Judul"}
               </h2>
 
-              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                <div className="flex items-center space-x-2 bg-white px-3 py-1 rounded-full border border-gray-200">
-                  <Calendar className="w-4 h-4" />
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
+                <div className="flex items-center space-x-2 bg-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full border border-gray-200 shadow-sm">
+                  <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                   <span>
-                    {format(new Date(entry.createdAt), "EEEE, MMMM d, yyyy", {
+                    {format(new Date(entry.createdAt), "EEEE, d MMM yyyy", {
                       locale: id,
                     })}
                   </span>
                 </div>
 
-                {entry.isPublic ? (
-                  <span className="px-3 py-1 rounded-full border border-blue-300 bg-blue-100 text-blue-800 text-sm font-medium flex items-center space-x-2">
-                    <Eye className="w-4 h-4" />
-                    <span>Publik</span>
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 rounded-full border border-gray-300 bg-gray-100 text-gray-800 text-sm font-medium flex items-center space-x-2">
-                    <EyeOff className="w-4 h-4" />
-                    <span>Pribadi</span>
-                  </span>
-                )}
+                {/* Badge Status */}
+                <span
+                  className={`px-2.5 py-1 md:px-3 md:py-1.5 rounded-full border text-xs md:text-sm font-medium flex items-center space-x-2 ${
+                    entry.isPublic
+                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  {entry.isPublic ? (
+                    <Eye className="w-3.5 h-3.5" />
+                  ) : (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  )}
+                  <span>{entry.isPublic ? "Publik" : "Pribadi"}</span>
+                </span>
               </div>
 
               {/* Tags */}
               {entry.tags && entry.tags.length > 0 && (
-                <div className="flex items-center space-x-3">
-                  <Tag className="w-4 h-4 text-gray-400" />
-                  <div className="flex flex-wrap gap-2">
-                    {entry.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 bg-white text-gray-700 text-sm rounded-full border border-gray-300"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <Tag className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400" />
+                  {entry.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-0.5 md:px-3 md:py-1 bg-white text-gray-700 text-xs md:text-sm rounded-md border border-gray-200 shadow-sm"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Author for public entries */}
+            {/* User Info (Mobile: Compact, Desktop: Card) */}
             {entry.user && (
-              <div className="flex items-center space-x-3 bg-white rounded-lg p-3 border border-gray-200">
-                <img
-                  src={entry.user.avatar}
-                  alt={entry.user.name}
-                  className="w-10 h-10 rounded-full"
-                />
+              <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm md:self-start md:min-w-[200px]">
+                {entry.user.avatar ? (
+                  <img
+                    src={getImageUrl(entry.user.avatar)}
+                    alt={entry.user.name}
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-linear-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white font-bold text-sm md:text-lg">
+                    {entry.user.name?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                )}
                 <div>
-                  <p className="font-medium text-gray-900">{entry.user.name}</p>
-                  <p className="text-sm text-gray-500">Penulis</p>
+                  <p className="font-semibold text-gray-900 text-sm md:text-base">
+                    {entry.user.name}
+                  </p>
+                  <p className="text-xs text-gray-500">Penulis</p>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Images Gallery */}
+        {/* BODY CONTENT */}
+        <div className="p-4 md:p-8 space-y-6 md:space-y-8">
+          {/* Gambar Utama Grid */}
           {entry.images && entry.images.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              className={`grid gap-3 md:gap-4 ${
+                entry.images.length === 1
+                  ? "grid-cols-1"
+                  : "grid-cols-1 sm:grid-cols-2" // Mobile 1 kolom, Tablet+ 2 kolom
+              }`}
+            >
               {entry.images.map((image, index) => (
-                <div key={index} className="group relative">
+                <div
+                  key={index}
+                  className="group relative rounded-lg md:rounded-xl overflow-hidden border border-gray-200 shadow-sm aspect-video bg-gray-100"
+                >
                   <img
-                    src={image}
-                    alt={`Gambar jurnal ${index + 1}`}
-                    className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                    src={getImageUrl(image)}
+                    alt={`Gambar ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
                   />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Journal Content */}
-          <div className="prose prose-lg max-w-none">
-            <div>{parse(entry.content)}</div>
+          {/* Rich Text Content */}
+          {/* Class prose-img sangat PENTING untuk responsivitas gambar dalam teks */}
+          <div
+            className="prose prose-sm md:prose-lg max-w-none text-gray-800 leading-relaxed
+          prose-headings:font-bold prose-headings:text-gray-900
+          prose-p:text-gray-700 prose-a:text-green-600 
+          prose-img:rounded-xl prose-img:w-full prose-img:h-auto prose-img:shadow-sm prose-img:my-6"
+          >
+            {parse(entry.content)}
           </div>
-
-          {/* Last Updated */}
-          {entry.updatedAt !== entry.createdAt && (
-            <div className="pt-6 border-t border-gray-200">
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <Clock className="w-4 h-4" />
-                <span>
-                  Diperbarui terakhir:{" "}
-                  {format(
-                    new Date(entry.updatedAt),
-                    "MMM d, yyyy 'at' h:mm a",
-                    { locale: id }
-                  )}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

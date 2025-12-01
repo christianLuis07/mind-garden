@@ -1,4 +1,3 @@
-// src/routes/journalRoutes.js
 const express = require("express");
 const multer = require("multer");
 const {
@@ -8,6 +7,7 @@ const {
   getPublicJournalEntries,
   updateJournalEntry,
   deleteJournalEntry,
+  deleteJournalImage, // Import controller baru
   getJournalAnalytics,
 } = require("../controllers/journalController");
 const { auth, optionalAuth } = require("../middleware/auth");
@@ -33,15 +33,13 @@ const parseJournalFormData = (req, res, next) => {
   next();
 };
 
-// Public routes (optional auth for public entries)
 router.get("/public", optionalAuth, getPublicJournalEntries);
 
-// Protected routes (require auth)
 router.use(auth);
 
 router.post(
   "/",
-  upload.array("gambar", 5),
+  upload.array("images", 5),
   parseJournalFormData,
   validateJournalEntry,
   createJournalEntry
@@ -57,5 +55,7 @@ router.put(
   updateJournalEntry
 );
 router.delete("/:id", deleteJournalEntry);
+
+router.delete("/:id/images/:index", deleteJournalImage);
 
 module.exports = router;
