@@ -12,6 +12,12 @@ export default function CommunityPage() {
   const [currentView, setCurrentView] = useState<ViewMode>("list");
   const [selectedGroup, setSelectedGroup] = useState<SupportGroup | null>(null);
 
+  // State untuk Statistik Dinamis
+  const [stats, setStats] = useState({
+    totalGroups: 0,
+    totalMembers: 0,
+  });
+
   const handleViewGroup = (group: SupportGroup) => {
     setSelectedGroup(group);
     setCurrentView("chat");
@@ -20,6 +26,14 @@ export default function CommunityPage() {
   const handleBackToList = () => {
     setCurrentView("list");
     setSelectedGroup(null);
+  };
+
+  // Callback untuk update statistik dari GroupsList
+  const handleStatsUpdate = (newStats: {
+    totalGroups: number;
+    totalMembers: number;
+  }) => {
+    setStats(newStats);
   };
 
   return (
@@ -45,31 +59,37 @@ export default function CommunityPage() {
         {/* Stats - Hanya muncul di tampilan List */}
         {currentView === "list" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <div className="bg-white rounded-lg p-6 shadow-sm border transition-all hover:shadow-md">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <Users className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">50+</p>
+                  {/* Gunakan stats.totalMembers */}
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalMembers > 0 ? stats.totalMembers : "..."}
+                  </p>
                   <p className="text-sm text-gray-600">Anggota Komunitas</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <div className="bg-white rounded-lg p-6 shadow-sm border transition-all hover:shadow-md">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <MessageCircle className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">12</p>
+                  {/* Gunakan stats.totalGroups */}
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.totalGroups > 0 ? stats.totalGroups : "..."}
+                  </p>
                   <p className="text-sm text-gray-600">Grup Dukungan</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <div className="bg-white rounded-lg p-6 shadow-sm border transition-all hover:shadow-md">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Users2 className="w-6 h-6 text-purple-600" />
@@ -86,10 +106,10 @@ export default function CommunityPage() {
         {/* Content */}
         <div className="space-y-6">
           {currentView === "list" && (
-            // PERBAIKAN DI SINI:
-            // 1. Menggunakan prop 'onSelectGroup' sesuai definisi di GroupsList
-            // 2. Menghapus 'onCreateGroup' karena sudah ditangani internal GroupsList
-            <GroupsList onSelectGroup={handleViewGroup} />
+            <GroupsList
+              onSelectGroup={handleViewGroup}
+              onStatsUpdate={handleStatsUpdate} // Pass callback disini
+            />
           )}
 
           {currentView === "chat" && selectedGroup && (
@@ -97,7 +117,7 @@ export default function CommunityPage() {
           )}
         </div>
 
-        {/* Community Guidelines - Hanya muncul di list */}
+        {/* Community Guidelines */}
         {currentView === "list" && (
           <div className="mt-12 bg-blue-50 border border-blue-200 rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">
