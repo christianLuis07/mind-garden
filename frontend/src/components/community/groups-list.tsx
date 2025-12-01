@@ -22,24 +22,41 @@ import { toast } from "sonner";
 
 interface GroupsListProps {
   onSelectGroup: (group: SupportGroup) => void;
+  onStatsUpdate?: (stats: {
+    totalGroups: number;
+    totalMembers: number;
+  }) => void;
 }
 
-export function GroupsList({ onSelectGroup }: GroupsListProps) {
+export function GroupsList({ onSelectGroup, onStatsUpdate }: GroupsListProps) {
   const [groups, setGroups] = useState<SupportGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Fungsi untuk mengambil data grup dari API
   const fetchGroups = async () => {
     try {
       setLoading(true);
       const response = await communityAPI.getSupportGroups({
         search: searchQuery || undefined,
-        limit: 20, // Batasi 20 grup agar tidak terlalu berat
+        limit: 100,
       });
       if (response.data.success) {
-        setGroups(response.data.data.groups);
+        const fetchedGroups = response.data.data.groups;
+        setGroups(fetchedGroups);
+
+        if (onStatsUpdate) {
+          const totalMembers = fetchedGroups.reduce((acc, curr) => {
+            const count = curr.memberCount || curr._count?.members || 0;
+            return acc + count;
+          }, 0);
+
+          onStatsUpdate({
+            totalGroups:
+              response.data.data.pagination.total || fetchedGroups.length,
+            totalMembers,
+          });
+        }
       }
     } catch (error) {
       console.error("Gagal memuat Groups: ", error);
@@ -49,7 +66,6 @@ export function GroupsList({ onSelectGroup }: GroupsListProps) {
     }
   };
 
-  // Efek untuk memanggil fetchGroups saat searchQuery berubah (dengan debounce)
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchGroups();
@@ -58,26 +74,24 @@ export function GroupsList({ onSelectGroup }: GroupsListProps) {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Handler saat grup berhasil dibuat
   const handleCreateSuccess = (newGroup: SupportGroup) => {
     setShowCreateForm(false);
-    setGroups((prev) => [newGroup, ...prev]); // Masukkan grup baru ke paling atas
+    setGroups((prev) => [newGroup, ...prev]);
     toast.success("Grup berhasil dibuat!");
+    fetchGroups();
   };
 
-  // Handler untuk Quick Join (Opsional)
   const handleJoinGroup = async (e: React.MouseEvent, groupId: string) => {
-    e.stopPropagation(); // Mencegah card diklik
+    e.stopPropagation();
     try {
       await communityAPI.joinSupportGroup(groupId);
       toast.success("Berhasil bergabung!");
-      fetchGroups(); // Refresh status member
+      fetchGroups();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Gagal bergabung");
     }
   };
 
-  // Tampilkan Form Buat Grup jika state true
   if (showCreateForm) {
     return (
       <CreateGroupForm

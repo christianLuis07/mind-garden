@@ -32,7 +32,7 @@ export default function NotFound() {
       title: "Community",
       description: "Temukan dukungan dari orang lain",
       icon: "👥",
-      path: "/community",
+      path: "/dashboard/community",
     },
   ];
 

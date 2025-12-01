@@ -21,6 +21,8 @@ import { id } from "date-fns/locale";
 import { GroupInfo } from "./group-info";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
+// [BARU] Import Socket Client
+import { io, Socket } from "socket.io-client";
 
 interface GroupChatProps {
   group: SupportGroup;
@@ -28,7 +30,6 @@ interface GroupChatProps {
 }
 
 export function GroupChat({ group, onBack }: GroupChatProps) {
-  // Ambil user ID dari store untuk membedakan chat bubble (Kanan vs Kiri)
   const { user } = useAuthStore();
   const currentUserId = user?.id;
 
@@ -43,26 +44,69 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
 
-  // State untuk Info Panel
   const [showInfo, setShowInfo] = useState(false);
 
-  // Callback ketika user berhasil keluar grup (keluar sendiri)
+  // [BARU] Ref untuk menyimpan koneksi socket
+  const socketRef = useRef<Socket | null>(null);
+
+  const messageEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleSelfLeft = () => {
     onBack();
   };
 
-  const messageEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // [BARU] Setup Socket.io
+  useEffect(() => {
+    // Ganti URL ini sesuai dengan URL backend-mu.
+    // Jika backend berjalan di port 5000:
+    const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
+      ? process.env.NEXT_PUBLIC_API_URL.replace("/api/v1", "") // Hapus suffix API jika ada
+      : "http://localhost:5000";
+
+    // 1. Inisialisasi Socket
+    socketRef.current = io(SOCKET_URL, {
+      withCredentials: true, // Penting untuk CORS session/cookies
+      transports: ["websocket", "polling"],
+    });
+
+    // 2. Join Group Room
+    socketRef.current.emit("join_group", group.id);
+
+    // 3. Listen Pesan Masuk (Realtime)
+    socketRef.current.on(
+      "receive_message",
+      (incomingMessage: SupportGroupMessage) => {
+        // Update state messages dengan pengecekan duplikasi
+        setMessages((prev) => {
+          // Cek apakah pesan dengan ID ini sudah ada? (Mencegah pesan ganda dari API response + Socket)
+          if (prev.some((msg) => msg.id === incomingMessage.id)) {
+            return prev;
+          }
+          return [...prev, incomingMessage];
+        });
+
+        // Auto scroll ke bawah
+        scrollToBottom();
+      }
+    );
+
+    // Cleanup saat user keluar halaman / ganti grup
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.emit("leave_group", group.id);
+        socketRef.current.disconnect();
+      }
+    };
+  }, [group.id]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      // Fetch detail grup untuk cek status member
       const groupRes = await communityAPI.getSupportGroup(group.id);
       if (groupRes.data.success) {
         const groupData: any = groupRes.data.data;
-        // Handle struktur response yang mungkin berbeda (nested vs flat)
         const targetGroup = groupData.supportGroup || groupData.group;
 
         if (targetGroup) {
@@ -71,7 +115,6 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
         }
       }
 
-      // Fetch pesan
       const msgRes = await communityAPI.getGroupMessages(group.id);
       if (msgRes.data.success) {
         setMessages(msgRes.data.data.messages);
@@ -92,7 +135,10 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Tambahkan sedikit delay untuk memastikan DOM render
+    setTimeout(() => {
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   const sendMessage = async () => {
@@ -100,18 +146,32 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
 
     try {
       setSending(true);
+
+      // [OPTIMISASI] Kosongkan input segera agar terasa responsif
+      const contentToSend = newMessage.trim();
+      setNewMessage("");
+
       const response = await communityAPI.sendMessage(group.id, {
-        content: newMessage.trim(),
+        content: contentToSend,
         messageType: "text",
       });
+
       if (response.data.success) {
-        setMessages((prev) => [...prev, response.data.data.message]);
-        setNewMessage("");
+        const savedMessage = response.data.data.message;
+
+        // Tambahkan ke list HANYA JIKA socket belum menambahkannya
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === savedMessage.id)) return prev;
+          return [...prev, savedMessage];
+        });
+
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     } catch (error) {
       console.error("Gagal mengirim pesan:", error);
       toast.error("Gagal mengirim pesan");
+      // Kembalikan teks jika gagal
+      setNewMessage(newMessage);
     } finally {
       setSending(false);
     }
@@ -125,7 +185,7 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
         toast.success("Berhasil bergabung!");
         setIsMember(true);
         setHasPendingInvite(false);
-        fetchData(); // Refresh agar pesan sistem muncul
+        fetchData();
       }
     } catch (error: any) {
       if (error.response?.data?.message?.includes("sudah menjadi anggota")) {
@@ -227,7 +287,7 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
                 </div>
               ) : (
                 <div className="flex items-center gap-3 overflow-hidden">
-                  {/* Placeholder untuk menjaga layout jika needed */}
+                  {/* Placeholder */}
                 </div>
               )}
             </div>
@@ -250,9 +310,9 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
         </CardContent>
       </Card>
 
-      {/* MAIN CONTAINER: Membungkus Chat & Info Panel agar bersebelahan/overlay */}
+      {/* MAIN CONTAINER */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* KOLOM CHAT: Messages + Input */}
+        {/* KOLOM CHAT */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#efeae2] relative">
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 relative">
