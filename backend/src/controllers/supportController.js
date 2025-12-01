@@ -91,6 +91,16 @@ const createGroupMessage = async (req, res, next) => {
       req.body
     );
 
+    const io = req.app.get("io");
+
+    if (io) {
+      io.to(id).emit("receive_message", message);
+
+      console.log(`Socket.io: pesan dikirim ke group ${id}`);
+    } else {
+      console.error("Socket.io instance not found in app settings");
+    }
+
     successResponse(res, "Message sent successfully", { message }, 201);
   } catch (error) {
     next(error);
