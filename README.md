@@ -1,7 +1,4 @@
 
-
-
-
 1. Konsep dan Filosofi Proyek
 MindGarden adalah sebuah platform digital yang didedikasikan untuk kesehatan mental dan kesejahteraan emosional. Proyek ini bertujuan menyediakan solusi terpadu (All-in-One) bagi pengguna untuk memantau, merefleksikan, dan meningkatkan kondisi mental mereka.
 
