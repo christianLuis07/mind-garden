@@ -1,6 +1,7 @@
+// src/app/(auth)/verify-email/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react"; // Tambah import Suspense
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { authAPI } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
 
-export default function VerifyEmailPage() {
+// 1. Pisahkan logika utama ke komponen "Content"
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -76,13 +78,11 @@ export default function VerifyEmailPage() {
   if (isVerifying) {
     return (
       <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-        {/* Decorative gradient orbs */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
         <div className="relative flex items-center justify-center min-h-screen p-4">
           <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Section */}
             <div className="text-center mb-8 space-y-2">
               <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
                 Memverifikasi Email
@@ -90,7 +90,6 @@ export default function VerifyEmailPage() {
               <p className="text-gray-600 text-lg">Harap tunggu sebentar...</p>
             </div>
 
-            {/* Glassmorphism Card */}
             <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
               <CardHeader className="space-y-1 pb-6">
                 <CardTitle className="text-2xl font-bold text-gray-800 text-center">
@@ -119,13 +118,11 @@ export default function VerifyEmailPage() {
   if (status === "success" && !isVerifying) {
     return (
       <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-        {/* Decorative gradient orbs */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
         <div className="relative flex items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-2xl  animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Section */}
+          <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="text-center mb-8 space-y-2">
               <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
                 Verifikasi Berhasil!
@@ -135,7 +132,6 @@ export default function VerifyEmailPage() {
               </p>
             </div>
 
-            {/* Glassmorphism Card */}
             <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
               <CardHeader className="space-y-1 pb-6">
                 <CardTitle className="text-2xl font-bold text-gray-800 text-center">
@@ -181,13 +177,11 @@ export default function VerifyEmailPage() {
   // Default State (Check Email / Error)
   return (
     <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-      {/* Decorative gradient orbs */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
       <div className="relative flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {/* Header Section */}
           <div className="text-center mb-8 space-y-2">
             <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
               Verifikasi Email
@@ -199,7 +193,6 @@ export default function VerifyEmailPage() {
             </p>
           </div>
 
-          {/* Glassmorphism Card */}
           <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
             <CardHeader className="space-y-1 pb-6">
               <CardTitle className="text-2xl font-bold text-gray-800 text-center">
@@ -207,7 +200,6 @@ export default function VerifyEmailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Error Message */}
               {error && (
                 <div className="bg-red-50/80 backdrop-blur border border-red-200/50 text-red-700 px-4 py-3 rounded-xl text-sm shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-start gap-2">
@@ -227,7 +219,6 @@ export default function VerifyEmailPage() {
                 </div>
               )}
 
-              {/* Status Error Warning */}
               {status === "error" && (
                 <div className="bg-yellow-50/80 backdrop-blur border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-xl text-sm shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-start gap-2">
@@ -250,7 +241,6 @@ export default function VerifyEmailPage() {
                 </div>
               )}
 
-              {/* Email Icon Illustration */}
               <div className="text-center py-6">
                 <div className="w-20 h-20 bg-linear-to-r from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
@@ -279,7 +269,6 @@ export default function VerifyEmailPage() {
                 </p>
               </div>
 
-              {/* Action Buttons */}
               <div className="space-y-3">
                 <Button
                   onClick={resendVerification}
@@ -304,7 +293,6 @@ export default function VerifyEmailPage() {
                 </Button>
               </div>
 
-              {/* Help Tips */}
               <div className="bg-blue-50/50 backdrop-blur border border-blue-100 rounded-xl p-4 text-sm">
                 <p className="text-gray-700 font-medium mb-3 flex items-center gap-2">
                   <svg
@@ -340,5 +328,20 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 2. Export Default dengan Wrapper Suspense
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Spinner className="w-8 h-8 text-green-600" />
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
