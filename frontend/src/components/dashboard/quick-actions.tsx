@@ -26,7 +26,7 @@ const actions = [
   {
     name: "Gabung Komunitas Dukungan",
     description: "Terhubung dengan orang lain",
-    href: "/dashboard/support",
+    href: "/dashboard/community",
     icon: Users,
     color: "from-orange-400 to-orange-500",
   },
