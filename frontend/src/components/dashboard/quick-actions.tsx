@@ -12,7 +12,7 @@ const actions = [
   {
     name: "Tulis Jurnal",
     description: "Ungkapkan isi pikiranmu",
-    href: "/dashboard/journal/new",
+    href: "/dashboard/journal",
     icon: BookOpen,
     color: "from-blue-400 to-blue-500",
   },
