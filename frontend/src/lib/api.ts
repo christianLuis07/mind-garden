@@ -13,9 +13,12 @@ export const api = axios.create({
 // Request interceptor untuk menambah token
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("mindgarden_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Don't override manually-set Authorization headers (e.g. tempToken for admin TOTP)
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem("mindgarden_token");
+      if (token && token !== "undefined") {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
   }
   return config;
@@ -26,9 +29,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("mindgarden_token");
-      localStorage.removeItem("mindgarden_user");
-      window.location.href = "/login";
+      // Don't redirect if already on login/admin pages
+      const path = typeof window !== "undefined" ? window.location.pathname : "";
+      if (!path.startsWith("/login") && !path.startsWith("/admin")) {
+        localStorage.removeItem("mindgarden_token");
+        localStorage.removeItem("mindgarden_user");
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

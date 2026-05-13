@@ -101,6 +101,18 @@ export const communityAPI = {
       data: { message: SupportGroupMessage };
     }>(`/community/groups/${groupId}/messages`, data),
 
+  // kirim pesan gambar
+  sendImageMessage: (groupId: string, formData: FormData) =>
+    api.post<{
+      success: boolean;
+      message: string;
+      data: { message: SupportGroupMessage };
+    }>(`/community/groups/${groupId}/messages/image`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }),
+
   deleteMessage: (groupId: string, messageId: string) =>
     api.delete<{ success: boolean; message: string }>(
       `/community/groups/${groupId}/messages/${messageId}`

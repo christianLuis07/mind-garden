@@ -338,7 +338,7 @@ class SupportService {
   }
 
   async createGroupMessage(groupId, userId, messageData) {
-    const { content, messageType = "text" } = messageData;
+    const { content, messageType = "text", imageUrl } = messageData;
 
     // Verifikasi akses pengguna ke grup
     await this.verifyGroupAccess(groupId, userId);
@@ -347,6 +347,7 @@ class SupportService {
       data: {
         content,
         messageType,
+        imageUrl,
         userId,
         supportGroupId: groupId,
       },

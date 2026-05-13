@@ -329,7 +329,7 @@ export function JournalAnalyticsComponent() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={sentimentData}
+                    data={sentimentData.filter((item) => item.value > 0)}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -340,7 +340,9 @@ export function JournalAnalyticsComponent() {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {sentimentData.map((entry, index) => (
+                    {sentimentData
+                      .filter((item) => item.value > 0)
+                      .map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={

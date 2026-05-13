@@ -4,6 +4,7 @@ const {
   avatarStorage,
   journalImageStorage,
   supportGroupStorage,
+  supportMessageStorage,
 } = require("../config/cloudinary");
 
 // File filter
@@ -52,6 +53,16 @@ const uploadSupportImage = multer({
   },
 });
 
+const uploadSupportMessageImage = multer({
+  storage: supportMessageStorage,
+  fileFilter,
+  limits: {
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242880, // default 5MB
+    files: 1, // maksimal 1 file
+  },
+});
+
+
 // Error handling middleware
 const handleUploadError = (error, req, res, next) => {
   if (error instanceof multer.MulterError) {
@@ -81,5 +92,6 @@ module.exports = {
   uploadAvatar,
   uploadJournalImage,
   uploadSupportImage,
+  uploadSupportMessageImage,
   handleUploadError,
 };

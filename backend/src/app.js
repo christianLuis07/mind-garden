@@ -19,11 +19,11 @@ app.use(
 );
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 1000, // 1000 request per 15 menit
   message: {
     success: false,
-    message: "Too many requests from this IP, please try again later.",
+    message: "Terlalu banyak permintaan, coba lagi nanti",
   },
 });
 app.use("/api", limiter);

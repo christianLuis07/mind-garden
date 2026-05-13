@@ -87,17 +87,24 @@ class JournalService {
   }
 
   async updateJournalEntry(userId, entryId, updateData, files) {
+    // 1. Cek exist + ownership sekaligus (aman, tidak leak info)
     const journalEntry = await prisma.journalEntry.findFirst({
       where: { id: entryId, userId },
     });
 
-    if (!journalEntry) throw new Error("Journal entry not found");
+    if (!journalEntry) {
+      const error = new Error("Journal entry not found");
+      error.statusCode = 404;
+      throw error;
+    }
 
+    // 2. Upload gambar baru kalau ada
     let newImages = [];
     if (files && files.length > 0) {
       newImages = await this.saveFiles(files);
     }
 
+    // 3. Filter field yang boleh diupdate
     const allowedUpdates = ["title", "content", "tags", "isPublic"];
     const filteredData = Object.keys(updateData)
       .filter((key) => allowedUpdates.includes(key))
@@ -110,11 +117,12 @@ class JournalService {
         return obj;
       }, {});
 
+    // 4. Analisis sentiment kalau content diupdate
     if (filteredData.content) {
       filteredData.sentiment = this.analyzeSentiment(filteredData.content);
     }
 
-    // Gabungkan gambar lama (yang belum dihapus) dengan gambar baru
+    // 5. Gabung gambar lama + baru
     const currentImages = journalEntry.images || [];
     const updatedImages = [...currentImages, ...newImages];
 
@@ -285,39 +293,144 @@ class JournalService {
   analyzeSentiment(content) {
     if (!content) return 0;
     const positiveWords = [
-      "happy",
-      "good",
-      "great",
-      "awesome",
-      "love",
-      "excited",
+      "happy", "good", "great", "awesome", "love", "excited",
+      "senang", "bahagia", "gembira", "bersyukur", "semangat",
+      "lega", "cinta", "sayang", "suka", "bagus", "hebat",
+      "keren", "nyaman", "optimis", "bangga", "damai", "indah",
+      "asyik", "seru", "baik", "aman", "tenang", "produktif", "puas"
     ];
     const negativeWords = [
-      "sad",
-      "bad",
-      "terrible",
-      "hate",
-      "angry",
-      "worried",
+      "sad", "bad", "terrible", "hate", "angry", "worried",
+      "sedih", "marah", "kecewa", "kesal", "benci", "takut",
+      "cemas", "khawatir", "gelisah", "buruk", "jelek", "hancur",
+      "gagal", "lelah", "capek", "sakit", "stres", "depresi",
+      "pusing", "bingung", "kesepian", "hampa", "putus", "parah",
+      "payah", "malas", "bosan", "menangis", "berantakan", "hancur"
     ];
-    const words = content.toLowerCase().split(/\s+/);
+
+    // Hapus tag HTML
+    let cleanContent = content.replace(/<[^>]*>/g, " ");
+
+    // Hapus semua tanda baca, angka, dan karakter selain huruf (hanya sisakan a-z dan spasi)
+    cleanContent = cleanContent.toLowerCase().replace(/[^a-z\s]/g, " ");
+
+    const words = cleanContent.split(/\s+/);
+
     let score = 0;
     words.forEach((word) => {
       if (positiveWords.includes(word)) score += 1;
       if (negativeWords.includes(word)) score -= 1;
     });
-    return parseFloat(Math.max(-1, Math.min(1, score / 10)).toFixed(2));
+
+    // Normalisasi: 5 kata positif/negatif cukup untuk mencapai skor maksimal (+1.0 atau -1.0)
+    return parseFloat(Math.max(-1, Math.min(1, score / 5)).toFixed(2));
   }
 
   async getJournalAnalytics(userId, timeframe = "30d") {
-    // Implementasi analytics sederhana
-    return {
-      overview: {},
-      sentiment: {},
+    let startDate = null;
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    if (timeframe === "7h" || timeframe === "7d") {
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (timeframe === "30h" || timeframe === "30d") {
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 30);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (timeframe === "90h" || timeframe === "90d") {
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 90);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (timeframe === "1t" || timeframe === "1y") {
+      startDate = new Date(now);
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    const whereClause = { userId };
+    if (startDate) {
+      whereClause.createdAt = { gte: startDate };
+    }
+
+    const entries = await prisma.journalEntry.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const analytics = {
+      overview: {
+        totalEntries: 0,
+        averageSentiment: 0,
+        totalWords: 0,
+        writingFrequency: { daily: {}, totalDays: 0, entriesPerDay: 0 },
+      },
+      sentiment: { average: 0, positive: 0, negative: 0, neutral: 0, total: 0 },
       tags: {},
-      wordCount: {},
-      recentActivity: [],
+      wordCount: { average: 0, max: 0, min: 0, totalWords: 0 },
+      recentActivity: entries.slice(0, 5),
     };
+
+    if (entries.length === 0) return analytics;
+
+    analytics.overview.totalEntries = entries.length;
+    analytics.sentiment.total = entries.length;
+
+    let totalSentimentScore = 0;
+    let maxWords = 0;
+    let minWords = Infinity;
+    const dailyCounts = {};
+
+    entries.forEach((entry) => {
+      const cleanText = entry.content ? entry.content.replace(/<[^>]*>/g, "").trim() : "";
+      const words = cleanText.split(/\s+/).filter((w) => w.length > 0).length;
+
+      analytics.wordCount.totalWords += words;
+      if (words > maxWords) maxWords = words;
+      if (words < minWords) minWords = words;
+
+      const score = entry.sentiment || 0;
+      totalSentimentScore += score;
+      if (score > 0.1) analytics.sentiment.positive++;
+      else if (score < -0.1) analytics.sentiment.negative++;
+      else analytics.sentiment.neutral++;
+
+      if (entry.tags && Array.isArray(entry.tags)) {
+        entry.tags.forEach((tag) => {
+          analytics.tags[tag] = (analytics.tags[tag] || 0) + 1;
+        });
+      }
+
+      const dateKey = new Date(entry.createdAt).toISOString().split("T")[0];
+      dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1;
+    });
+
+    if (minWords === Infinity) minWords = 0;
+
+    analytics.wordCount.max = maxWords;
+    analytics.wordCount.min = minWords;
+    analytics.wordCount.average = Math.round(analytics.wordCount.totalWords / entries.length);
+    analytics.overview.totalWords = analytics.wordCount.totalWords;
+
+    const avgSentiment = totalSentimentScore / entries.length;
+    analytics.sentiment.average = parseFloat(avgSentiment.toFixed(2));
+    analytics.overview.averageSentiment = analytics.sentiment.average;
+
+    const activeDays = Object.keys(dailyCounts).length;
+    let timeframeDays = activeDays;
+
+    // Estimate timeframe days for entriesPerDay calculation if timeframe is specified
+    if (startDate) {
+      const timeDiff = now.getTime() - startDate.getTime();
+      timeframeDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    }
+
+    analytics.overview.writingFrequency.daily = dailyCounts;
+    analytics.overview.writingFrequency.totalDays = activeDays;
+    analytics.overview.writingFrequency.entriesPerDay = timeframeDays > 0 ? parseFloat((entries.length / timeframeDays).toFixed(1)) : 0;
+
+    return analytics;
   }
 }
 

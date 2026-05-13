@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -30,6 +31,10 @@ model User {
   // Password reset fields
   passwordResetToken String?
   passwordResetExpires DateTime?
+
+  // TOTP (Two-Factor Authentication)
+  totpSecret    String?
+  isTotpEnabled Boolean @default(false)
 
   updatedAt DateTime @updatedAt
 

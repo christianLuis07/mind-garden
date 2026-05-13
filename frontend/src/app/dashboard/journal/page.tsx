@@ -41,13 +41,11 @@ export default function JournalPage() {
   };
 
   const handleEditorCancel = () => {
-    // Kembali ke view sebelumnya jika memungkinkan, atau default ke list
     setCurrentView(previousView === "community" ? "community" : "list");
     setEditingEntry(null);
   };
 
   const handleBackToList = () => {
-    // Kembali ke list yang sesuai (Komunitas atau Jurnal Saya)
     setCurrentView(previousView === "community" ? "community" : "list");
     setSelectedEntry(null);
   };

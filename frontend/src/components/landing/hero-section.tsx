@@ -28,9 +28,8 @@ export function HeroSection() {
 
         {/* Subheadline */}
         <p className="text-xl lg:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-          Dengan MindGarden, kamu bisa memantau kesehatan mental, membangun
-          kebiasaan sehat, dan bergabung dengan komunitas yang peduli, semua
-          dalam satu platform yang aman dan menyenangkan.
+          Silahkan Masuk Untuk menikmati semua fitur kami dan mulai perjalananmu
+          menuju kesehatan mental yang lebih baik.
         </p>
 
         {/* CTA Buttons */}

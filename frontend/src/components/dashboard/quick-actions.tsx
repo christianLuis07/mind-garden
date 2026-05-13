@@ -12,7 +12,7 @@ const actions = [
   {
     name: "Tulis Jurnal",
     description: "Ungkapkan isi pikiranmu",
-    href: "/dashboard/journal/new",
+    href: "/dashboard/journal",
     icon: BookOpen,
     color: "from-blue-400 to-blue-500",
   },
@@ -26,7 +26,7 @@ const actions = [
   {
     name: "Gabung Komunitas Dukungan",
     description: "Terhubung dengan orang lain",
-    href: "/dashboard/support",
+    href: "/dashboard/community",
     icon: Users,
     color: "from-orange-400 to-orange-500",
   },

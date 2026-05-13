@@ -107,6 +107,37 @@ const createGroupMessage = async (req, res, next) => {
   }
 };
 
+const createGroupImageMessage = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "File gambar tidak ditemukan" });
+    }
+
+    const imageUrl = req.file.path;
+
+    const message = await supportService.createGroupMessage(
+      id,
+      req.user.id,
+      { content: "Mengirim gambar", messageType: "image", imageUrl }
+    );
+
+    const io = req.app.get("io");
+
+    if (io) {
+      io.to(id).emit("receive_message", message);
+      console.log(`Socket.io: pesan gambar dikirim ke group ${id}`);
+    } else {
+      console.error("Socket.io instance not found in app settings");
+    }
+
+    successResponse(res, "Image message sent successfully", { message }, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getUserSupportGroups = async (req, res, next) => {
   try {
     const userGroups = await supportService.getUserSupportGroups(req.user.id);
@@ -178,6 +209,7 @@ module.exports = {
   leaveSupportGroup,
   getGroupMessages,
   createGroupMessage,
+  createGroupImageMessage,
   getUserSupportGroups,
   inviteUser,
   promoteMember,
