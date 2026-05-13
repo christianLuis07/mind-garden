@@ -199,6 +199,7 @@ npm run dev
 ```
 
 Aplikasi web akan berjalan di `http://localhost:3000`.
+Anda kini dapat mengakses aplikasi MindGarden, mendaftar, dan memulai perjalanan Anda.
 
 ---
 
