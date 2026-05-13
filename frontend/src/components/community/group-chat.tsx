@@ -10,6 +10,7 @@ import {
   X,
   Check,
   MoreVertical,
+  ImagePlus,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -46,11 +47,16 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
 
   const [showInfo, setShowInfo] = useState(false);
 
+  // Image Upload State
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   // [BARU] Ref untuk menyimpan koneksi socket
   const socketRef = useRef<Socket | null>(null);
 
   const messageEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelfLeft = () => {
     onBack();
@@ -141,37 +147,78 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
     }, 100);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // check size
+      if (file.size > 5242880) {
+        toast.error("Ukuran gambar maksimal 5MB");
+        return;
+      }
+      // check type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Format file tidak didukung");
+        return;
+      }
+      
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const cancelImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !selectedImage) return;
 
     try {
       setSending(true);
 
-      // [OPTIMISASI] Kosongkan input segera agar terasa responsif
-      const contentToSend = newMessage.trim();
-      setNewMessage("");
+      if (selectedImage) {
+        const formData = new FormData();
+        formData.append("image", selectedImage);
+        
+        const response = await communityAPI.sendImageMessage(group.id, formData);
+        if (response.data.success) {
+          cancelImage(); // clear image
+          const savedMessage = response.data.data.message;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === savedMessage.id)) return prev;
+            return [...prev, savedMessage];
+          });
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }
+      } else {
+        // [OPTIMISASI] Kosongkan input segera agar terasa responsif
+        const contentToSend = newMessage.trim();
+        setNewMessage("");
 
-      const response = await communityAPI.sendMessage(group.id, {
-        content: contentToSend,
-        messageType: "text",
-      });
-
-      if (response.data.success) {
-        const savedMessage = response.data.data.message;
-
-        // Tambahkan ke list HANYA JIKA socket belum menambahkannya
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === savedMessage.id)) return prev;
-          return [...prev, savedMessage];
+        const response = await communityAPI.sendMessage(group.id, {
+          content: contentToSend,
+          messageType: "text",
         });
 
-        setTimeout(() => inputRef.current?.focus(), 100);
+        if (response.data.success) {
+          const savedMessage = response.data.data.message;
+
+          // Tambahkan ke list HANYA JIKA socket belum menambahkannya
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === savedMessage.id)) return prev;
+            return [...prev, savedMessage];
+          });
+
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal mengirim pesan:", error);
-      toast.error("Gagal mengirim pesan");
+      toast.error(error.response?.data?.message || "Gagal mengirim pesan");
       // Kembalikan teks jika gagal
-      setNewMessage(newMessage);
+      if (!selectedImage) setNewMessage(newMessage);
     } finally {
       setSending(false);
     }
@@ -366,9 +413,19 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
                       </p>
                     )}
 
-                    <p className="leading-relaxed whitespace-pre-wrap wrap-break-word text-sm">
-                      {message.content}
-                    </p>
+                    {message.messageType === "image" && message.imageUrl ? (
+                      <div className="mb-1 mt-1">
+                        <img 
+                          src={message.imageUrl} 
+                          alt="Shared image" 
+                          className="rounded-md max-w-full h-auto object-cover max-h-64 sm:max-h-72 border border-black/5" 
+                        />
+                      </div>
+                    ) : (
+                      <p className="leading-relaxed whitespace-pre-wrap wrap-break-word text-sm">
+                        {message.content}
+                      </p>
+                    )}
 
                     <div
                       className={`text-[10px] mt-1 flex items-center gap-1 ${
@@ -403,34 +460,49 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
           {/* Input Area */}
           <div className="p-2 sm:p-3 bg-[#f0f2f5] z-20 sticky bottom-0">
             {isMember ? (
-              <div className="flex items-end gap-2 max-w-4xl mx-auto">
-                <div className="flex-1 bg-white rounded-2xl flex items-center px-4 py-2 shadow-sm border border-gray-100 min-h-11">
-                  <Input
-                    ref={inputRef}
-                    placeholder="Ketik pesan..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={sending}
-                    className="border-none shadow-none focus-visible:ring-0 p-0 h-auto max-h-32 min-h-6 resize-none bg-transparent text-gray-800 placeholder:text-gray-400"
-                    autoComplete="off"
-                  />
+              <div className="flex flex-col gap-2 max-w-4xl mx-auto w-full">
+                {/* Preview Image */}
+                {imagePreview && (
+                  <div className="relative inline-block self-start ml-12">
+                    <img src={imagePreview} alt="Preview" className="h-24 sm:h-32 rounded-lg object-cover border-2 border-white shadow-md" />
+                    <button onClick={cancelImage} disabled={sending} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 transition-colors z-10">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+                <div className="flex items-end gap-2 w-full">
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
+                  <Button type="button" variant="ghost" size="icon" disabled={sending} className="shrink-0 h-11 w-11 rounded-full bg-white hover:bg-gray-100 shadow-sm border border-gray-100" onClick={() => fileInputRef.current?.click()}>
+                    <ImagePlus className="w-5 h-5 text-gray-500" />
+                  </Button>
+                  <div className="flex-1 bg-white rounded-2xl flex items-center px-4 py-2 shadow-sm border border-gray-100 min-h-11">
+                    <Input
+                      ref={inputRef}
+                      placeholder={selectedImage ? "Gambar siap dikirim..." : "Ketik pesan..."}
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      disabled={sending || !!selectedImage}
+                      className="border-none shadow-none focus-visible:ring-0 p-0 h-auto max-h-32 min-h-6 resize-none bg-transparent text-gray-800 placeholder:text-gray-400"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <Button
+                    onClick={sendMessage}
+                    disabled={(!newMessage.trim() && !selectedImage) || sending}
+                    className={`h-11 w-11 rounded-full shrink-0 shadow-sm transition-all flex items-center justify-center ${
+                      newMessage.trim() || selectedImage
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-gray-300"
+                    }`}
+                  >
+                    {sending ? (
+                      <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5 text-white" />
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim() || sending}
-                  className={`h-11 w-11 rounded-full shrink-0 shadow-sm transition-all flex items-center justify-center ${
-                    newMessage.trim()
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-gray-300"
-                  }`}
-                >
-                  {sending ? (
-                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Send className="w-5 h-5 text-white" />
-                  )}
-                </Button>
               </div>
             ) : (
               <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm text-center mx-auto max-w-lg">

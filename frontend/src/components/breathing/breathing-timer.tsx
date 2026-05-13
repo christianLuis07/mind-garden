@@ -25,6 +25,8 @@ export function BreathingTimer({
   const [cycleCount, setCycleCount] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [showRating, setShowRating] = useState(false);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -221,15 +223,12 @@ export function BreathingTimer({
 
   const handleCompleteClick = () => {
     pauseTimer();
+    setShowRating(true);
+  };
 
-    // Ask for calm level rating
-    const calmLevelInput = prompt(
-      "Seberapa tenang perasaanmu sekarang? (skala 1-10)"
-    );
-    const calmLevel = calmLevelInput ? parseInt(calmLevelInput) : undefined;
-
-    if (calmLevel && calmLevel >= 1 && calmLevel <= 10) {
-      saveSession(totalTime, calmLevel);
+  const submitRating = () => {
+    if (selectedRating !== null) {
+      saveSession(totalTime, selectedRating);
     } else {
       saveSession(totalTime);
     }
@@ -259,6 +258,45 @@ export function BreathingTimer({
 
   const currentConfig = phaseConfig[currentPhase];
   const progress = (timeLeft / currentConfig.duration) * 100;
+
+  if (showRating) {
+    return (
+      <div className="max-w-2xl mx-auto text-center space-y-8 py-8 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Latihan Selesai!</h2>
+        <p className="text-gray-600 mb-8">Kerja bagus. Seberapa tenang perasaanmu setelah melakukan sesi ini?</p>
+        
+        <div className="flex justify-center flex-wrap gap-2 max-w-md mx-auto">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+            <button
+              key={num}
+              onClick={() => setSelectedRating(num)}
+              className={`w-12 h-12 rounded-full text-lg font-semibold transition-all ${
+                selectedRating === num
+                  ? "bg-green-600 text-white shadow-lg scale-110"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+        
+        <div className="flex justify-between items-center max-w-md mx-auto px-2 text-sm text-gray-500 font-medium">
+          <span>1 - Kurang Tenang</span>
+          <span>10 - Sangat Tenang</span>
+        </div>
+        
+        <div className="flex justify-center space-x-4 pt-8">
+           <Button variant="outline" onClick={() => saveSession(totalTime)}>
+             Lewati
+           </Button>
+           <Button onClick={submitRating} disabled={selectedRating === null} className="bg-green-600 hover:bg-green-700 px-8">
+             Simpan Penilaian
+           </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">

@@ -1,122 +1,398 @@
-1. Konsep dan Filosofi Proyek
-MindGarden adalah sebuah platform digital yang didedikasikan untuk kesehatan mental dan kesejahteraan emosional. Proyek ini bertujuan menyediakan solusi terpadu (All-in-One) bagi pengguna untuk memantau, merefleksikan, dan meningkatkan kondisi mental mereka.
+# 🌱 MindGarden
 
-Filosofi inti proyek ini adalah aksesibilitas dan privasi. MindGarden dirancang untuk selamanya gratis (didukung oleh grants dan donasi komunitas) dan menjamin 100% privasi dengan enkripsi data yang aman.
+**Platform digital terpadu untuk kesehatan mental dan kesejahteraan emosional.**
 
-MindGarden mengatasi masalah umum dalam perawatan diri, yaitu kesulitan melacak pola emosi dan perasaan terisolasi, dengan menyatukan alat-alat canggih di bawah satu antarmuka yang indah dan intuitif.
+MindGarden menyediakan solusi All-in-One bagi pengguna untuk memantau, merefleksikan, dan meningkatkan kondisi mental mereka — mulai dari pelacakan mood, jurnal reflektif, latihan pernapasan, hingga komunitas dukungan.
 
-2. Rincian Fitur dan Fungsionalitas
-A. Pelacakan Mood (Mood Tracking)
-Fungsionalitas utama ini memungkinkan pengguna untuk secara teratur mencatat keadaan emosi mereka.
+---
 
-Pencatatan Mood: Pengguna memilih tingkat mood pada skala 1 (Sangat Sedih) hingga 5 (Sangat Bahagia).
+## 📋 Daftar Isi
 
-Faktor Pemicu: Pengguna dapat memasukkan faktor-faktor yang mungkin memengaruhi mood, seperti skor kualitas tidur, apakah mereka berolahraga, aktivitas sosial, dan tekanan pekerjaan. Data faktor disimpan dalam format JSON di database (MoodEntry.factors) untuk fleksibilitas.
+- [Prasyarat](#-prasyarat)
+- [Instalasi](#-instalasi)
+  - [1. Clone Repository](#1-clone-repository)
+  - [2. Setup Backend](#2-setup-backend)
+  - [3. Setup Frontend](#3-setup-frontend)
+- [Menjalankan Aplikasi](#-menjalankan-aplikasi)
+- [Akun Demo](#-akun-demo)
+- [Fitur Utama](#-fitur-utama)
+- [Tech Stack](#-tech-stack)
+- [Struktur Proyek](#-struktur-proyek)
+- [Keamanan](#-keamanan)
+- [Environment Variables](#-environment-variables)
 
-Visualisasi Data: Data mood divisualisasikan dalam bentuk kalender berwarna (MoodCalendar) dan grafik analitik (MoodAnalytics) yang menampilkan rata-rata mood dan pola mingguan dalam kerangka waktu tertentu (7 hari, 30 hari, dll.).
+---
 
-B. Jurnal Reflektif (Journaling)
-Fitur ini menyediakan ruang aman untuk ekspresi diri dan refleksi.
+## ✅ Prasyarat
 
-Penyimpanan Teks Panjang: Model JournalEntry di database mendukung teks panjang (@db.Text) untuk konten jurnal yang mendalam.
+Pastikan perangkat Anda sudah terinstal:
 
-Analisis Sentimen: Backend service secara otomatis menghitung skor sentimen (sentiment antara -1 dan 1) berdasarkan konten yang ditulis pengguna, memberikan wawasan objektif terhadap perasaan mereka.
+| Software   | Versi Minimum | Keterangan                         |
+| ---------- | ------------- | ---------------------------------- |
+| **Node.js** | `>= 18.x`    | [Download](https://nodejs.org/)   |
+| **npm**     | `>= 9.x`     | Terinstal bersama Node.js          |
+| **MySQL**   | `>= 8.0`     | [Download](https://dev.mysql.com/) |
+| **Git**     | Terbaru       | [Download](https://git-scm.com/)  |
 
-Gambar dan Privasi: Entri dapat mencakup lampiran gambar (images sebagai JSON array) dan memiliki flag isPublic yang memungkinkan pengguna berbagi inspirasi secara opsional dengan komunitas.
+Anda juga membutuhkan:
+- **Akun Cloudinary** — untuk penyimpanan file/gambar ([cloudinary.com](https://cloudinary.com/))
+- **Akun Email SMTP** — untuk pengiriman email verifikasi (bisa menggunakan Gmail App Password)
 
-C. Latihan Pernapasan (Breathing Exercises)
-Fitur ini menawarkan alat untuk ketenangan instan.
+---
 
-Beragam Teknik: Menyediakan berbagai teknik pernapasan terpandu (misalnya, Box Breathing, 4-7-8 Breathing, Belly Breathing, dan Alternate Nostril Breathing) dengan langkah-langkah dan manfaat yang jelas.
+## 🚀 Instalasi
 
-Pencatatan Sesi: Setiap sesi dicatat dalam model BreathingSession dengan durasi dan tingkat ketenangan yang dilaporkan pengguna setelah sesi selesai (calmLevel 1-10).
+### 1. Clone Repository
 
-D. Komunitas Dukungan (Support Community)
-MindGarden menumbuhkan lingkungan yang suportif melalui grup komunitas.
+```bash
+git clone https://github.com/christianLuis07/mind-garden.git
+cd mind-garden
+```
 
-Model Grup: Model SupportGroup memungkinkan pembuatan grup publik atau privat dengan batas anggota tertentu (maxMembers).
+---
 
-Manajemen Anggota: Peran anggota (member, moderator, admin) disimpan di model SupportGroupMember untuk memfasilitasi moderasi dan administrasi grup.
+### 2. Setup Backend
 
-Pesan Kaya: Model SupportGroupMessage mendukung pesan teks (messageType: 'text') dan pesan berbasis gambar (imageUrl), memungkinkan komunikasi yang lebih ekspresif.
+#### a. Install Dependensi
 
-3. Rincian Tumpukan Teknologi (Tech Stack)
-A. Sisi Klien (Frontend) - Frontend
-Frontend dibangun dengan fokus pada kinerja dan pengalaman pengguna yang luar biasa.
-
-Framework: Next.js versi 16.0.3, memanfaatkan App Router yang modern untuk routing dan server-side rendering.
-
-Bahasa: TypeScript untuk memastikan konsistensi dan meminimalkan bug.
-
-Manajemen Status: Zustand digunakan sebagai state management library yang minimalis. useAuthStore menggunakan middleware persist untuk menyimpan sesi pengguna (token dan data) secara lokal, memastikan status otentikasi dipertahankan antar sesi.
-
-Desain: Menggunakan Tailwind CSS dengan utilitas yang dikustomisasi, dilengkapi dengan komponen UI dari Shadcn UI untuk elemen dasar seperti Button, Card, dan Input.
-
-Koneksi API: Axios adalah klien HTTP utama. Ia memiliki interceptor yang secara otomatis melampirkan token JWT untuk permintaan terotentikasi dan merespons status 401 Unauthorized dengan membersihkan sesi dan mengarahkan pengguna kembali ke halaman login.
-
-B. Sisi Server (Backend) - Backend
-Backend adalah API RESTful yang aman dan terstruktur.
-
-Framework: Node.js dengan Express.js.
-
-Database: Menggunakan Prisma ORM untuk berinteraksi dengan database MySQL.
-
-Otentikasi: Menggunakan Bcrypt untuk meng-hash kata sandi dan JWT untuk membuat dan memverifikasi token sesi.
-
-Keamanan Jaringan: Ditingkatkan dengan Helmet (untuk header keamanan), CORS (dikonfigurasi untuk mengizinkan akses dari CLIENT_URL frontend), dan Express Rate Limit (membatasi 1000 permintaan per 15 menit per IP).
-
-Validasi: Dilakukan di lapisan middleware dengan Express Validator, yang memvalidasi format data dan memastikan integritas data (misalnya, memastikan email unik sebelum pendaftaran).
-
-Layanan File: Pengunggahan file menggunakan Multer dan disimpan di layanan pihak ketiga, Cloudinary, dengan konfigurasi penyimpanan spesifik untuk avatar, journal images, dan gambar support group.
-
-4. Panduan Instalasi dan Pengembangan (Setup)
-Untuk menjalankan proyek ini, Anda perlu menyiapkan dua lingkungan terpisah (backend dan frontend).
-
-Langkah A: Persiapan Lingkungan Dasar
-Pastikan Anda memiliki Node.js (rekomendasi versi >=18) dan MySQL yang terinstal.
-
-Dapatkan kunci API untuk Cloudinary (untuk penyimpanan file) dan kredensial SMTP (untuk layanan email Nodemailer).
-
-Langkah B: Pengaturan Backend
-Instalasi Dependensi:
-
-Bash
-
+```bash
 cd backend
 npm install
-Konfigurasi Environment: Buat file bernama .env di folder backend dan isi variabel rahasia yang diperlukan. Pastikan DATABASE_URL Anda sudah benar.
+```
 
-Migrasi Database: Sinkronkan skema database (termasuk tabel users, mood_entries, support_groups, dll.) dengan perintah Prisma:
+#### b. Buat File Environment
 
-Bash
+Buat file `.env` di folder `backend/` dan isi dengan konfigurasi berikut:
 
-npx prisma migrate dev --name initial_setup
-Seeding Data (Opsional): Jalankan seeder untuk mengisi data awal demo:
+```env
+# Environment
+NODE_ENV=development
+PORT=5000
 
-Bash
+# Database (sesuaikan dengan MySQL Anda)
+DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/mindgarden"
 
+# JWT (ganti dengan secret key Anda sendiri)
+JWT_SECRET=your-super-secret-jwt-key-ganti-ini-dengan-string-acak-yang-panjang
+JWT_EXPIRES_IN=30d
+JWT_COOKIE_EXPIRE=30
+
+# Cloudinary (dari dashboard Cloudinary Anda)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email SMTP (contoh menggunakan Gmail)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_gmail_app_password
+EMAIL_FROM=MindGarden <noreply@mindgarden.com>
+
+# Client & Backend URL
+CLIENT_URL=http://localhost:3000
+BACKEND_URL=http://localhost:5000
+
+# File Upload Limits
+MAX_FILE_SIZE=5242880
+```
+
+> **💡 Tips:** Untuk `JWT_SECRET`, jalankan perintah ini di terminal untuk membuat secret key acak:
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+> ```
+
+> **💡 Tips Gmail:** Untuk `EMAIL_PASS`, gunakan **App Password** dari Google. Buka [Google Account → Security → App Passwords](https://myaccount.google.com/apppasswords), buat password baru untuk "Mail".
+
+#### c. Buat Database MySQL
+
+Buka MySQL client Anda (MySQL Workbench, terminal, phpMyAdmin, dsb.) dan buat database:
+
+```sql
+CREATE DATABASE mindgarden;
+```
+
+Pastikan `DATABASE_URL` di file `.env` sudah sesuai dengan username, password, host, port, dan nama database Anda.
+
+#### d. Sinkronisasi Skema Database
+
+```bash
+npx prisma db push
+```
+
+Perintah ini akan membuat semua tabel yang diperlukan (`users`, `mood_entries`, `journal_entries`, `breathing_sessions`, `support_groups`, dsb.) berdasarkan skema di `prisma/schema.prisma`.
+
+#### e. Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+#### f. Seed Data Demo (Opsional)
+
+Untuk mengisi database dengan data demo:
+
+```bash
 npm run seed
-# Catatan: Ini akan menghapus data yang ada dan membuat pengguna demo (misalnya, john@example.com, sandi: password123)
-Menjalankan Server:
+```
 
-Bash
+> ⚠️ **Peringatan:** Seeder akan menghapus data yang ada dan membuat pengguna demo baru.
 
-npm run dev
-# Server API akan berjalan di http://localhost:5000/api/v1 (default)
-Langkah C: Pengaturan Frontend
-Instalasi Dependensi:
+#### g. Buat Akun Admin (Opsional)
 
-Bash
+Untuk membuat akun Global Admin dengan proteksi TOTP:
 
+```bash
+node seed-admin.js
+```
+
+Ini membuat akun admin dengan email `admin@mindgarden.local` dan password `password123`.
+
+---
+
+### 3. Setup Frontend
+
+#### a. Install Dependensi
+
+```bash
 cd frontend
 npm install
-Konfigurasi API URL: Buat file bernama .env.local di folder frontend dan tautkan ke backend:
+```
 
+#### b. Buat File Environment
+
+Buat file `.env.local` di folder `frontend/` dan isi:
+
+```env
+# Backend API
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
-Menjalankan Aplikasi Web:
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-Bash
+Pastikan `NEXT_PUBLIC_API_URL` mengarah ke alamat dan port backend Anda.
 
+---
+
+## ▶️ Menjalankan Aplikasi
+
+Anda perlu menjalankan **dua terminal terpisah** — satu untuk backend, satu untuk frontend.
+
+### Terminal 1 — Backend
+
+```bash
+cd backend
 npm run dev
-# Aplikasi web akan berjalan di http://localhost:3000
-Anda kini dapat mengakses aplikasi MindGarden, mendaftar, dan memulai perjalanan Anda.
+```
+
+Server API akan berjalan di `http://localhost:5000`.
+
+> **Catatan:** Jika `nodemon` belum terinstal global, Anda juga bisa menjalankan langsung:
+> ```bash
+> node server.js
+> ```
+
+### Terminal 2 — Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+Aplikasi web akan berjalan di `http://localhost:3000`.
+
+---
+
+## 👤 Akun Demo
+
+Setelah menjalankan seeder, Anda bisa login dengan akun berikut:
+
+| Tipe   | Email                     | Password      | Keterangan                     |
+| ------ | ------------------------- | ------------- | ------------------------------ |
+| User   | `john@example.com`        | `password123` | Akun demo pengguna biasa       |
+| Admin  | `admin@mindgarden.local`  | `password123` | Akun admin (perlu `seed-admin.js`) |
+
+**Login Admin:**
+1. Buka `http://localhost:3000/admin/login`
+2. Masukkan email dan password admin
+3. Saat pertama kali login, Anda akan diminta memindai QR Code menggunakan aplikasi **Google Authenticator** atau **Authy** di smartphone
+4. Masukkan 6 digit kode TOTP dari aplikasi authenticator
+5. Setelah berhasil, Anda akan masuk ke Dashboard Admin
+
+---
+
+## 🧩 Fitur Utama
+
+### 📊 Pelacakan Mood
+- Catat mood harian pada skala 1–5
+- Masukkan faktor pemicu (tidur, olahraga, stress, dll.)
+- Visualisasi kalender mood dan grafik analitik
+
+### 📝 Jurnal Reflektif
+- Editor teks kaya untuk ekspresi diri yang mendalam
+- Analisis sentimen otomatis (-1 s/d 1)
+- Lampiran gambar dan opsi berbagi publik
+
+### 🧘 Latihan Pernapasan
+- Teknik terpandu: Box Breathing, 4-7-8, Belly Breathing, dll.
+- Pencatatan durasi sesi dan tingkat ketenangan (1–10)
+
+### 💬 Komunitas Dukungan
+- Grup publik dan privat
+- Chat real-time dengan Socket.io
+- Peran anggota: member, moderator, admin grup
+
+### 🛡️ Dashboard Admin Global
+- Statistik platform (total pengguna, jurnal, sentimen)
+- Manajemen pengguna (blokir/pulihkan akun)
+- Proteksi 2 langkah (TOTP) wajib untuk admin
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Teknologi    | Versi    | Keterangan                        |
+| ------------ | -------- | --------------------------------- |
+| Next.js      | 16.0.3   | React Framework (App Router)      |
+| TypeScript   | 5.x      | Bahasa pemrograman                |
+| Tailwind CSS | 4.x      | Utility-first CSS                 |
+| Zustand      | 5.x      | State management                  |
+| Axios        | 1.x      | HTTP client                       |
+| Recharts     | 3.x      | Visualisasi grafik                |
+| Socket.io    | 4.x      | Real-time communication (client)  |
+| Shadcn UI    | —        | Komponen UI (Radix-based)         |
+
+### Backend
+| Teknologi       | Versi   | Keterangan                       |
+| --------------- | ------- | -------------------------------- |
+| Node.js         | >= 18   | Runtime                          |
+| Express.js      | 5.x     | Web framework                    |
+| Prisma          | 5.x     | ORM (MySQL)                      |
+| JWT             | 9.x     | Autentikasi token                |
+| Bcrypt          | 6.x     | Hashing password                 |
+| Speakeasy       | 2.x     | TOTP 2FA                         |
+| Socket.io       | 4.x     | Real-time communication (server) |
+| Helmet          | 8.x     | HTTP security headers            |
+| Multer          | 2.x     | File upload handling             |
+| Cloudinary      | 1.x     | Cloud storage gambar             |
+| Nodemailer      | 7.x     | Pengiriman email                 |
+
+---
+
+## 📁 Struktur Proyek
+
+```
+mind-garden/
+├── README.md
+├── backend/
+│   ├── .env                    # Konfigurasi environment (tidak di-commit)
+│   ├── server.js               # Entry point server
+│   ├── seed.js                 # Seeder data demo
+│   ├── seed-admin.js           # Seeder akun admin
+│   ├── package.json
+│   ├── prisma/
+│   │   └── schema.prisma       # Definisi skema database
+│   └── src/
+│       ├── app.js              # Setup Express
+│       ├── config/
+│       │   └── database.js     # Koneksi Prisma
+│       ├── controllers/        # Handler request
+│       ├── middleware/          # Auth, validation, error handler
+│       ├── routes/             # Definisi endpoint API
+│       ├── services/           # Business logic
+│       └── utils/              # Helper & logger
+├── frontend/
+│   ├── .env.local              # Konfigurasi environment (tidak di-commit)
+│   ├── package.json
+│   ├── next.config.ts
+│   └── src/
+│       ├── app/                # Halaman (App Router)
+│       │   ├── (auth)/         # Login, Register, Verifikasi
+│       │   ├── admin/          # Dashboard Admin
+│       │   └── dashboard/      # Dashboard User
+│       ├── components/         # Komponen UI reusable
+│       ├── lib/                # API client & utilities
+│       ├── store/              # Zustand stores
+│       └── types/              # TypeScript type definitions
+```
+
+---
+
+## 🔒 Keamanan
+
+| Fitur                     | Implementasi                                        |
+| ------------------------- | --------------------------------------------------- |
+| Hashing Password          | Bcrypt dengan salt rounds 12                        |
+| Token Autentikasi         | JWT dengan expiry 30 hari                           |
+| 2FA Admin                 | TOTP (Time-based OTP) via Speakeasy + QR Code       |
+| HTTP Security Headers     | Helmet.js                                           |
+| CORS                      | Dikonfigurasi hanya untuk `CLIENT_URL`              |
+| Rate Limiting             | 1000 request / 15 menit per IP                      |
+| Input Validation          | Express Validator di middleware                      |
+| SQL Injection Prevention  | Prisma ORM (parameterized queries)                  |
+| XSS Prevention            | Sanitasi input + Helmet                             |
+| File Upload Security      | Multer dengan batas ukuran & filter tipe file       |
+
+---
+
+## 🔑 Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variabel                 | Wajib | Deskripsi                                    |
+| ------------------------ | ----- | -------------------------------------------- |
+| `NODE_ENV`               | Ya    | `development` atau `production`              |
+| `PORT`                   | Ya    | Port server (default: `5000`)                |
+| `DATABASE_URL`           | Ya    | Connection string MySQL                      |
+| `JWT_SECRET`             | Ya    | Secret key untuk signing JWT                 |
+| `JWT_EXPIRES_IN`         | Ya    | Masa berlaku token (contoh: `30d`)           |
+| `CLOUDINARY_CLOUD_NAME`  | Ya    | Nama cloud Cloudinary                        |
+| `CLOUDINARY_API_KEY`     | Ya    | API key Cloudinary                           |
+| `CLOUDINARY_API_SECRET`  | Ya    | API secret Cloudinary                        |
+| `EMAIL_HOST`             | Ya    | SMTP host (contoh: `smtp.gmail.com`)         |
+| `EMAIL_PORT`             | Ya    | SMTP port (contoh: `587`)                    |
+| `EMAIL_USER`             | Ya    | Alamat email pengirim                        |
+| `EMAIL_PASS`             | Ya    | Password atau App Password email             |
+| `EMAIL_FROM`             | Ya    | Nama pengirim email                          |
+| `CLIENT_URL`             | Ya    | URL frontend (contoh: `http://localhost:3000`)|
+| `BACKEND_URL`            | Ya    | URL backend (contoh: `http://localhost:5000`) |
+| `MAX_FILE_SIZE`          | Tidak | Batas ukuran upload dalam bytes (default: 5MB)|
+
+### Frontend (`frontend/.env.local`)
+
+| Variabel                 | Wajib | Deskripsi                                    |
+| ------------------------ | ----- | -------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`    | Ya    | URL API backend (contoh: `http://localhost:5000/api/v1`) |
+| `NEXT_PUBLIC_APP_URL`    | Ya    | URL aplikasi frontend                        |
+
+---
+
+## 🆘 Troubleshooting
+
+### `Error: P1001 - Can't reach database server`
+- Pastikan MySQL sudah berjalan
+- Periksa `DATABASE_URL` di `.env` (username, password, port, nama database)
+
+### `Error: ECONNREFUSED` saat mengakses frontend
+- Pastikan backend sudah berjalan di terminal terpisah
+- Pastikan `NEXT_PUBLIC_API_URL` di `.env.local` sesuai dengan port backend
+
+### `npx prisma db push` gagal
+- Pastikan database `mindgarden` sudah dibuat di MySQL
+- Pastikan `DATABASE_URL` sudah benar
+
+### TOTP tidak valid saat login admin
+- Pastikan jam di smartphone dan komputer sudah tersinkronisasi
+- Kode TOTP berubah setiap 30 detik — masukkan kode yang paling baru
+
+---
+
+## 📄 Lisensi
+
+ISC
+
+---
+
+<p align="center">
+  Dibuat dengan 💚 oleh Tim MindGarden
+</p>

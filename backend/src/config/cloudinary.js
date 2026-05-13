@@ -13,7 +13,7 @@ const avatarStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "mindgarden/avatars",
-    format: async (req, file) => "png", // mengonversi semua gambar ke format PNG
+    format: async (req, file) => "png",
     transformation: [
       { width: 200, height: 200, crop: "fill", gravity: "face" },
       { quality: "auto" },
@@ -30,10 +30,8 @@ const journalImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "mindgarden/journal-images",
-    format: async (req, file) => "auto",
     transformation: [
       { width: 1200, crop: "limit", quality: "auto" },
-      { format: "auto" },
     ],
     public_id: (req, file) => {
       const timestamp = Date.now();
@@ -46,14 +44,26 @@ const supportGroupStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "mindgarden/support-groups",
-    format: async (req, file) => "auto",
     transformation: [
       { width: 1200, crop: "limit", quality: "auto" },
-      { format: "auto" },
     ],
     public_id: (req, file) => {
       const timestamp = Date.now();
       return `supportgroup_${req.user.id}_${timestamp}`;
+    },
+  },
+});
+
+const supportMessageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "mindgarden/support-messages",
+    transformation: [
+      { width: 1200, crop: "limit", quality: "auto" },
+    ],
+    public_id: (req, file) => {
+      const timestamp = Date.now();
+      return `supportmsg_${req.user.id}_${timestamp}`;
     },
   },
 });
@@ -63,4 +73,5 @@ module.exports = {
   avatarStorage,
   journalImageStorage,
   supportGroupStorage,
+  supportMessageStorage,
 };

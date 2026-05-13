@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const speakeasy = require("speakeasy");
+const qrcode = require("qrcode");
 const { prisma } = require("../config/database");
 const { sanitizeUser } = require("../utils/helpers");
 const tokenService = require("./tokenService");
@@ -220,6 +222,20 @@ class AuthService {
       throw new Error("silakan verifikasi email Anda sebelum login");
     }
 
+    // Admin TOTP flow
+    if (user.role === "admin") {
+      // If admin, don't return full token. Return a temporary token for 2FA.
+      const tempToken = jwt.sign({ id: user.id, isTemp: true }, process.env.JWT_SECRET, {
+        expiresIn: "15m",
+      });
+      return {
+        requireTotp: true,
+        isTotpEnabled: user.isTotpEnabled,
+        tempToken,
+      };
+    }
+
+    // Normal user flow
     // generate token
     const token = this.generateToken(user.id);
 
@@ -229,12 +245,81 @@ class AuthService {
     };
   }
 
+  // TOTP Methods
+  async setupTotp(userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User not found");
+
+    const secret = speakeasy.generateSecret({
+      name: `MindGarden Admin (${user.email})`,
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { totpSecret: secret.base32 },
+    });
+
+    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
+    return { secret: secret.base32, qrCodeUrl };
+  }
+
+  async verifyTotpSetup(userId, token) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.totpSecret) throw new Error("TOTP setup not initialized");
+
+    const verified = speakeasy.totp.verify({
+      secret: user.totpSecret,
+      encoding: "base32",
+      token: token,
+      window: 2, // toleransi ±1 periode (60 detik) untuk perbedaan jam
+    });
+
+    if (!verified) throw new Error("Kode TOTP tidak valid");
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isTotpEnabled: true },
+    });
+
+    return { message: "TOTP berhasil diaktifkan" };
+  }
+
+  async validateTotpLogin(tempToken, token) {
+    let decoded;
+    try {
+      decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+      if (!decoded.isTemp) throw new Error("Invalid token type");
+    } catch (err) {
+      throw new Error("Token sesi kedaluwarsa atau tidak valid. Silakan login kembali.");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user || !user.totpSecret) throw new Error("User atau TOTP tidak ditemukan");
+
+    const verified = speakeasy.totp.verify({
+      secret: user.totpSecret,
+      encoding: "base32",
+      token: token,
+      window: 2, // toleransi ±1 periode (60 detik) untuk perbedaan jam
+    });
+
+    if (!verified) throw new Error("Kode TOTP salah");
+
+    const finalToken = this.generateToken(user.id);
+
+    return {
+      user: this.sanitizeUser(user),
+      token: finalToken,
+    };
+  }
+
   sanitizeUser(user) {
     const {
       password,
       emailVerification,
       passwordResetToken,
       passwordResetExpires,
+      totpSecret,
       ...sanitizedUser
     } = user;
     return sanitizedUser;

@@ -41,9 +41,41 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+const setupTotp = async (req, res, next) => {
+  try {
+    const result = await authService.setupTotp(req.user.id);
+    successResponse(res, "TOTP setup initiated", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const verifyTotp = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    const result = await authService.verifyTotpSetup(req.user.id, token);
+    successResponse(res, "TOTP verified successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const validateTotpLogin = async (req, res, next) => {
+  try {
+    const { tempToken, token } = req.body;
+    const result = await authService.validateTotpLogin(tempToken, token);
+    successResponse(res, "Login successful", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updateProfile,
+  setupTotp,
+  verifyTotp,
+  validateTotpLogin,
 };

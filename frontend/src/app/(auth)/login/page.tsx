@@ -47,6 +47,12 @@ export default function LoginPage() {
       const response = await authAPI.login(data);
 
       if (response.data.success) {
+        // Admin accounts require TOTP — redirect to admin login
+        if (response.data.data?.requireTotp) {
+          setError("Akun ini adalah administrator. Silakan login melalui halaman Admin.");
+          return;
+        }
+
         setAuth(response.data.data?.user, response?.data?.data?.token);
         router.push("/dashboard");
       }
