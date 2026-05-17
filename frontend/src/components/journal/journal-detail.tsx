@@ -9,6 +9,9 @@ import {
   EyeOff,
   Edit,
   Trash2,
+  BrainCircuit,
+  AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { journalAPI } from "@/lib/journal-api";
@@ -17,6 +20,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { toast } from "sonner";
 import parse from "html-react-parser";
+import { cn } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -179,6 +183,48 @@ export function JournalDetail({
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* AI Analysis Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+               <div className="bg-white/60 backdrop-blur-md p-5 rounded-[1.5rem] border border-primary/20 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                    entry.aiSentiment === 'Positive' ? 'bg-emerald-100 text-emerald-600' :
+                    entry.aiSentiment === 'Depression' || entry.aiSentiment === 'Anxiety' ? 'bg-rose-100 text-rose-600' :
+                    'bg-slate-100 text-slate-600'
+                  )}>
+                    <BrainCircuit className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Analisis Perasaan</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {entry.aiSentiment === 'Anxiety' ? 'Kecemasan' :
+                       entry.aiSentiment === 'Depression' ? 'Kesedihan Mendalam' :
+                       entry.aiSentiment === 'Positive' ? 'Positif & Bahagia' :
+                       entry.aiSentiment === 'Neutral' ? 'Tenang / Netral' : 'Menganalisis...'}
+                    </p>
+                  </div>
+               </div>
+
+               <div className={cn(
+                 "p-5 rounded-[1.5rem] border shadow-sm flex items-center gap-4 group hover:shadow-md transition-all",
+                 (entry.riskScore || 0) >= 7 ? 'bg-rose-50 border-rose-200' : 'bg-white/60 border-primary/20'
+               )}>
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                    (entry.riskScore || 0) >= 7 ? 'bg-rose-100 text-rose-600' : 'bg-primary/10 text-primary'
+                  )}>
+                    {(entry.riskScore || 0) >= 7 ? <AlertTriangle className="w-6 h-6 animate-pulse" /> : <ShieldCheck className="w-6 h-6 group-hover:scale-110 transition-transform" />}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Tingkat Risiko</p>
+                    <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                      {entry.riskScore !== undefined ? `${entry.riskScore} / 10` : "Menganalisis..."}
+                      {(entry.riskScore || 0) >= 7 && <span className="text-[9px] bg-rose-600 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Butuh Bantuan</span>}
+                    </p>
+                  </div>
+               </div>
             </div>
 
             {/* User Info (Mobile: Compact, Desktop: Card) */}

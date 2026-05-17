@@ -8,6 +8,7 @@ const {
   verifyTotp,
   changePassword,
   deleteAccount,
+  validateTotpLogin,
 } = require("../controllers/authController");
 const { auth } = require("../middleware/auth");
 const { validateRegister, validateLogin } = require("../middleware/validation");

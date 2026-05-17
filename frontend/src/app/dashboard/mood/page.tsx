@@ -27,7 +27,7 @@ export default function MoodPage() {
         <div className="relative overflow-hidden rounded-[3rem] bg-primary/10 p-8 md:p-12">
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-secondary/30 rounded-full blur-3xl animate-pulse delay-1000" />
-          
+
           <div className="relative z-10 max-w-2xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -37,8 +37,8 @@ export default function MoodPage() {
               <Heart className="w-4 h-4 text-primary" />
               <span className="text-xs font-bold uppercase tracking-widest text-primary">Jurnal Perasaan</span>
             </motion.div>
-            
-            <motion.h1 
+
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -46,8 +46,8 @@ export default function MoodPage() {
             >
               Bagaimana <span className="text-primary italic">Kabarmu Hari Ini?</span>
             </motion.h1>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -60,7 +60,7 @@ export default function MoodPage() {
 
         {/* Mood Input & Calendar */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
@@ -68,7 +68,7 @@ export default function MoodPage() {
           >
             <MoodInputForm onSuccess={handleMoodLogged} />
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -76,11 +76,11 @@ export default function MoodPage() {
             className="h-full"
           >
             <div className="glass-card rounded-[2.5rem] p-6 h-full border-none shadow-xl shadow-primary/5">
-               <div className="flex items-center space-x-3 mb-6 px-2">
-                 <div className="w-1.5 h-6 bg-primary rounded-full" />
-                 <h2 className="text-xl font-bold text-foreground tracking-tight">Kalender Perasaan</h2>
-               </div>
-               <MoodCalendar />
+              <div className="flex items-center space-x-3 mb-6 px-2">
+                <div className="w-1.5 h-6 bg-primary rounded-full" />
+                <h2 className="text-xl font-bold text-foreground tracking-tight">Kalender Perasaan</h2>
+              </div>
+              <MoodCalendar />
             </div>
           </motion.div>
         </div>
@@ -88,8 +88,8 @@ export default function MoodPage() {
         {/* Analytics Section */}
         <div className="space-y-6">
           <div className="flex items-center space-x-3">
-             <div className="w-1.5 h-8 bg-primary rounded-full" />
-             <h2 className="text-2xl font-bold text-foreground tracking-tight">Statistik Emosimu</h2>
+            <div className="w-1.5 h-8 bg-primary rounded-full" />
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Statistik Mood</h2>
           </div>
           <MoodAnalytics refreshTrigger={refreshTrigger} />
         </div>
@@ -97,8 +97,8 @@ export default function MoodPage() {
         {/* History */}
         <div className="space-y-6">
           <div className="flex items-center space-x-3">
-             <div className="w-1.5 h-8 bg-primary rounded-full" />
-             <h2 className="text-2xl font-bold text-foreground tracking-tight">Catatan Kemarin</h2>
+            <div className="w-1.5 h-8 bg-primary rounded-full" />
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Riwayat Mood</h2>
           </div>
           <MoodHistory refreshTrigger={refreshTrigger} />
         </div>

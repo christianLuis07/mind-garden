@@ -4,7 +4,9 @@ export interface JournalEntry {
   title?: string;
   content: string;
   images: string[];
-  sentiment?: number;
+  sentimentScore?: number; // Legacy score
+  aiSentiment?: string;   // Anxiety, Depression, Positive, Neutral
+  riskScore?: number;     // 1-10
   tags?: string[];
   isPublic: boolean;
   createdAt: string;

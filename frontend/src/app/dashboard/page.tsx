@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false);
   const [stats, setStats] = useState({
     moodEntries: 0,
     journalEntries: 0,
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
+    setHasMounted(true);
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
@@ -150,7 +152,7 @@ export default function DashboardPage() {
     return labels[mood - 1] || "netral";
   };
 
-  if (isLoading) {
+  if (isLoading || !hasMounted) {
     return (
       <ProtectedRoute>
         <div className="flex items-center justify-center min-h-[60vh]">

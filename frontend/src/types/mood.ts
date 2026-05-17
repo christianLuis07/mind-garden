@@ -22,6 +22,7 @@ export interface MoodAnalytics {
   };
   weeklyPatterns: Record<string, { count: number; average: number }>;
   commonFactors: Record<string, any>;
+  aiInsight?: string | null;
   recentEntries: MoodEntry[];
 }
 

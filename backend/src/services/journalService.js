@@ -1,6 +1,7 @@
 const { prisma } = require("../config/database");
 const { sanitizeContent } = require("../utils/sanitizer");
 const fileUploadService = require("./fileUploadService");
+const sentimentService = require("./sentimentService");
 
 class JournalService {
   async createJournalEntry(userId, journalData, files) {
@@ -11,7 +12,11 @@ class JournalService {
     // Ambil URL dari Cloudinary yang sudah diproses oleh multer
     const imageUrls = files ? files.map((file) => file.path) : [];
 
-    const sentiment = this.analyzeSentiment(content);
+    // Legacy sentiment analysis
+    const sentimentScore = this.analyzeSentimentLegacy(content);
+
+    // AI-Driven Sentiment Analysis & Risk Scoring (Lokal)
+    const { sentiment: aiSentiment, risk_score: riskScore } = await sentimentService.analyzeJournal(content);
 
     const isPublicBool = isPublic === "true" || isPublic === true;
 
@@ -21,7 +26,9 @@ class JournalService {
         title,
         content,
         tags: tags || [],
-        sentiment,
+        sentimentScore,
+        aiSentiment,
+        riskScore,
         isPublic: isPublicBool,
         images: imageUrls,
       },
@@ -64,7 +71,11 @@ class JournalService {
 
     // 4. Analisis sentiment kalau content diupdate
     if (filteredData.content) {
-      filteredData.sentiment = this.analyzeSentiment(filteredData.content);
+      filteredData.sentimentScore = this.analyzeSentimentLegacy(filteredData.content);
+      
+      const { sentiment: aiSentiment, risk_score: riskScore } = await sentimentService.analyzeJournal(filteredData.content);
+      filteredData.aiSentiment = aiSentiment;
+      filteredData.riskScore = riskScore;
     }
 
     // 5. Gabung gambar lama + baru
@@ -113,6 +124,19 @@ class JournalService {
         }
       } catch (e) {
         console.error("Gagal hapus file Cloudinary:", e);
+      }
+    } else if (imagePath.startsWith("/uploads/journal/")) {
+      // Logika aman untuk hapus file lokal legacy
+      try {
+        const path = require("path");
+        const fs = require("fs");
+        const fileName = path.basename(imagePath);
+        const fullPath = path.join(process.cwd(), "uploads", "journal", fileName);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      } catch (e) {
+        console.error("Gagal hapus file lokal legacy:", e);
       }
     }
 
@@ -245,7 +269,7 @@ class JournalService {
     return { message: "Journal entry deleted successfully" };
   }
 
-  analyzeSentiment(content) {
+  analyzeSentimentLegacy(content) {
     if (!content) return 0;
     const positiveWords = [
       "happy", "good", "great", "awesome", "love", "excited",
@@ -345,7 +369,7 @@ class JournalService {
       if (words > maxWords) maxWords = words;
       if (words < minWords) minWords = words;
 
-      const score = entry.sentiment || 0;
+      const score = entry.sentimentScore || 0;
       totalSentimentScore += score;
       if (score > 0.1) analytics.sentiment.positive++;
       else if (score < -0.1) analytics.sentiment.negative++;
