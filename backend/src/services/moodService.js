@@ -1,5 +1,6 @@
 const { prisma } = require("../config/database");
 const { calculateMoodStats } = require("../utils/helpers");
+const sentimentService = require("./sentimentService");
 
 class MoodService {
   async createMoodEntry(userId, moodData) {
@@ -70,9 +71,11 @@ class MoodService {
   }
 
   async getMoodAnalytics(userId, timeframe = "7d") {
-    const startDate = this.calculateStartDate(timeframe);
-
-    const entries = await prisma.moodEntry.findMany({
+    let startDate = this.calculateStartDate(timeframe);
+    
+    // Jika timeframe adalah 'all' atau tidak ada data di rentang tersebut, 
+    // kita bisa melonggarkan filter agar user melihat statistik awalnya.
+    let entries = await prisma.moodEntry.findMany({
       where: {
         userId,
         createdAt: {
@@ -82,6 +85,15 @@ class MoodService {
       orderBy: { createdAt: "asc" },
     });
 
+    // Fallback: Jika tidak ada data di timeframe terpilih, ambil 30 data terbaru secara total
+    if (entries.length === 0) {
+      entries = await prisma.moodEntry.findMany({
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+        take: 30
+      });
+    }
+
     const stats = calculateMoodStats(entries);
 
     // Weekly patterns
@@ -90,12 +102,41 @@ class MoodService {
     // Common factors
     const commonFactors = this.analyzeFactors(entries);
 
+    // AI-Driven Insights (Lokal)
+    let aiInsight = null;
+    if (entries.length >= 3) {
+      const moodSummary = {
+        averageMood: stats.averageMood,
+        totalEntries: entries.length,
+        mostFrequentMood: this.getMostFrequentMood(stats.moodDistribution),
+        topFactors: Object.keys(commonFactors)
+          .sort((a, b) => commonFactors[b].averageMood - commonFactors[a].averageMood)
+          .slice(0, 2)
+      };
+      aiInsight = await sentimentService.analyzeMoodTrends(moodSummary);
+    }
+
     return {
       overview: stats,
       weeklyPatterns,
       commonFactors,
+      aiInsight,
       recentEntries: entries.slice(0, 10),
     };
+  }
+
+  getMostFrequentMood(distribution) {
+    let max = 0;
+    let frequent = "Biasa Saja";
+    const labels = ["Sangat Sedih", "Agak Sedih", "Biasa Saja", "Senang", "Luar Biasa"];
+    
+    Object.keys(distribution).forEach(key => {
+      if (distribution[key] > max) {
+        max = distribution[key];
+        frequent = labels[parseInt(key) - 1] || "Biasa Saja";
+      }
+    });
+    return frequent;
   }
 
   calculateStartDate(timeframe) {

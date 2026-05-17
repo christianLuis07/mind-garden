@@ -19,6 +19,7 @@ import {
   Globe,
   Lock,
   Feather,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -302,6 +304,17 @@ export function JournalList({
                         <div className="bg-slate-800/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest shadow-sm flex items-center gap-1.5 text-white">
                            <Lock className="w-3 h-3" />
                            Privat
+                        </div>
+                     )}
+                     {entry.aiSentiment && (
+                        <div className={cn(
+                          "backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest shadow-sm flex items-center gap-1.5 text-white",
+                          entry.aiSentiment === 'Positive' ? 'bg-emerald-500/90' :
+                          entry.aiSentiment === 'Depression' || entry.aiSentiment === 'Anxiety' ? 'bg-rose-500/90' :
+                          'bg-slate-500/90'
+                        )}>
+                           <Sparkles className="w-3 h-3" />
+                           {entry.aiSentiment}
                         </div>
                      )}
                   </div>

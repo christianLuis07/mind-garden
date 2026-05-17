@@ -21,9 +21,9 @@ const calculateMoodStats = (moodEntries) => {
   }, {});
 
   return {
-    average: parseFloat(averageMood.toFixed(2)),
-    totalentries: moodEntries.length,
-    distribution: moodCounts,
+    averageMood: parseFloat(averageMood.toFixed(2)),
+    totalEntries: moodEntries.length,
+    moodDistribution: moodCounts,
   };
 };
 
