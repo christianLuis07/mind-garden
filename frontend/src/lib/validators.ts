@@ -9,7 +9,14 @@ export const registerSchema = z
   .object({
     name: z.string().min(3, "Nama setidaknya 3 karakter"),
     email: z.string().email("Silakan masukkan alamat email yang valid"),
-    password: z.string().min(8, "Password setidaknya 8 karakter"),
+    password: z
+      .string()
+      .min(8, "Password setidaknya 8 karakter")
+      .regex(/[A-Z]/, "Password harus mengandung setidaknya satu huruf besar")
+      .regex(/[a-z]/, "Password harus mengandung setidaknya satu huruf kecil")
+      .regex(/[0-9]/, "Password harus mengandung setidaknya satu angka")
+      .regex(/[^A-Za-z0-9]/, "Password harus mengandung setidaknya satu simbol"),
+
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -34,5 +41,22 @@ export const resetPasswordSchema = z
 
 export const profileSchema = z.object({
   name: z.string().min(3, "Nama setidaknya 3 karakter"),
-  avatar: z.string().optional(),
+  avatar: z.any().optional(),
 });
+
+export const changePasswordSchema = z
+  .object({
+    oldPassword: z.string().min(1, "Kata sandi lama wajib diisi"),
+    newPassword: z
+      .string()
+      .min(8, "Password setidaknya 8 karakter")
+      .regex(/[A-Z]/, "Password harus mengandung setidaknya satu huruf besar")
+      .regex(/[a-z]/, "Password harus mengandung setidaknya satu huruf kecil")
+      .regex(/[0-9]/, "Password harus mengandung setidaknya satu angka")
+      .regex(/[^A-Za-z0-9]/, "Password harus mengandung setidaknya satu simbol"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Konfirmasi kata sandi tidak sesuai.",
+    path: ["confirmPassword"],
+  });

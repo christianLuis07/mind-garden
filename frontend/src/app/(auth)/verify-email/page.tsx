@@ -1,16 +1,16 @@
-// src/app/(auth)/verify-email/page.tsx
 "use client";
 
-import { useState, useEffect, Suspense } from "react"; // Tambah import Suspense
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sprout, Mail, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AuthLayout } from "@/components/layout/auth-layout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { authAPI } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
+import Link from "next/link";
 
-// 1. Pisahkan logika utama ke komponen "Content"
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,7 +22,6 @@ function VerifyEmailContent() {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [error, setError] = useState("");
 
-  // Auto-verify jika ada token di URL
   useEffect(() => {
     if (token) {
       verifyEmail(token);
@@ -33,9 +32,7 @@ function VerifyEmailContent() {
     try {
       setIsLoading(true);
       setError("");
-
       const response = await authAPI.verifyEmail(verificationToken);
-
       if (response.data.success) {
         setStatus("success");
         setTimeout(() => {
@@ -55,17 +52,13 @@ function VerifyEmailContent() {
     try {
       setIsLoading(true);
       setError("");
-
-      // Get email from localStorage atau minta input
       const userData = localStorage.getItem("mindgarden_user");
       if (userData) {
         const user = JSON.parse(userData);
         await authAPI.resendVerification(user.email);
         setStatus("success");
       } else {
-        setError(
-          "Tidak dapat menemukan email pengguna. Silakan login kembali."
-        );
+        setError("Tidak dapat menemukan email pengguna. Silakan login kembali.");
       }
     } catch (error: any) {
       setError(getErrorMessage(error));
@@ -74,270 +67,130 @@ function VerifyEmailContent() {
     }
   };
 
-  // Verifying State
-  if (isVerifying) {
-    return (
-      <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
-
-        <div className="relative flex items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="text-center mb-8 space-y-2">
-              <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Memverifikasi Email
-              </h1>
-              <p className="text-gray-600 text-lg">Harap tunggu sebentar...</p>
-            </div>
-
-            <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
-              <CardHeader className="space-y-1 pb-6">
-                <CardTitle className="text-2xl font-bold text-gray-800 text-center">
-                  <AuthLayout />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center py-8">
-                <div className="w-20 h-20 bg-linear-to-r from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                  <Spinner className="w-10 h-10 text-green-600" />
-                </div>
-                <p className="text-gray-700 font-medium mb-2">
-                  Sedang memverifikasi email Anda
-                </p>
-                <p className="text-sm text-gray-500">
-                  Proses ini hanya memakan waktu beberapa detik
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Success State
-  if (status === "success" && !isVerifying) {
-    return (
-      <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
-
-        <div className="relative flex items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="text-center mb-8 space-y-2">
-              <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Verifikasi Berhasil!
-              </h1>
-              <p className="text-gray-600 text-lg">
-                Email Anda telah dikonfirmasi
-              </p>
-            </div>
-
-            <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
-              <CardHeader className="space-y-1 pb-6">
-                <CardTitle className="text-2xl font-bold text-gray-800 text-center">
-                  <AuthLayout />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center py-8">
-                <div className="w-20 h-20 bg-linear-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-                  <svg
-                    className="w-10 h-10 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <p className="text-gray-700 font-medium mb-2 text-lg">
-                  Email Berhasil Diverifikasi!
-                </p>
-                <p className="text-sm text-gray-500 mb-6">
-                  Anda akan diarahkan ke dashboard dalam beberapa saat
-                </p>
-                <div className="flex items-center justify-center gap-2">
-                  <Spinner className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">
-                    Mengarahkan ke dashboard...
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default State (Check Email / Error)
   return (
-    <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-      <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
-
-      <div className="relative flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="text-center mb-8 space-y-2">
-            <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Verifikasi Email
-            </h1>
-            <p className="text-gray-600 text-lg">
-              {message === "check-email"
-                ? "Cek kotak masuk email Anda"
-                : "Konfirmasi alamat email Anda"}
-            </p>
-          </div>
-
-          <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
-            <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-800 text-center">
-                <AuthLayout />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {error && (
-                <div className="bg-red-50/80 backdrop-blur border border-red-200/50 text-red-700 px-4 py-3 rounded-xl text-sm shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex items-start gap-2">
-                    <svg
-                      className="w-5 h-5 shrink-0 mt-0.5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span>{error}</span>
-                  </div>
-                </div>
-              )}
-
-              {status === "error" && (
-                <div className="bg-yellow-50/80 backdrop-blur border border-yellow-200/50 text-yellow-700 px-4 py-3 rounded-xl text-sm shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex items-start gap-2">
-                    <svg
-                      className="w-5 h-5 shrink-0 mt-0.5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span>
-                      Verifikasi gagal. Tautan mungkin sudah kadaluarsa atau
-                      tidak valid.
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="text-center py-6">
-                <div className="w-20 h-20 bg-linear-to-r from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-10 h-10 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-gray-700 font-medium mb-2">
-                  {message === "check-email"
-                    ? "Email Verifikasi Telah Dikirim"
-                    : "Verifikasi Email Diperlukan"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {message === "check-email"
-                    ? "Kami telah mengirim tautan verifikasi ke email Anda. Silakan cek kotak masuk Anda."
-                    : "Anda perlu memverifikasi alamat email sebelum dapat mengakses akun Anda."}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <Button
-                  onClick={resendVerification}
-                  className="w-full h-12 cursor-pointer bg-white hover:bg-gray-200 text-green-700 font-semibold rounded-xl border-2 border-green-600 shadow-lg shadow-green-500/10 hover:shadow-xl hover:shadow-green-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Spinner className="w-5 h-5" />
-                      Mengirim ulang...
-                    </span>
-                  ) : (
-                    "Kirim Ulang Email Verifikasi"
-                  )}
-                </Button>
-
-                <Button
-                  onClick={() => router.push("/login")}
-                  className="w-full h-12 cursor-pointer bg-transparent hover:bg-gray-50 text-gray-700 font-medium rounded-xl border border-gray-200 transition-all duration-300"
-                >
-                  Kembali ke Login
-                </Button>
-              </div>
-
-              <div className="bg-blue-50/50 backdrop-blur border border-blue-100 rounded-xl p-4 text-sm">
-                <p className="text-gray-700 font-medium mb-3 flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Belum menerima email?
-                </p>
-                <ul className="space-y-2 text-gray-600">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600">•</span>
-                    <span>Periksa folder spam atau junk email</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600">•</span>
-                    <span>Pastikan alamat email yang dimasukkan benar</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600">•</span>
-                    <span>Tunggu beberapa menit lalu coba kirim ulang</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="min-h-screen relative flex items-center justify-center bg-background overflow-hidden p-4">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px] animate-pulse delay-700" />
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-[500px] z-10"
+      >
+        <Card className="glass-card border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="pt-10 pb-2 text-center">
+             <Link href="/" className="inline-flex items-center space-x-2 group mb-6 mx-auto">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl shadow-primary/20">
+                <Sprout className="text-white w-7 h-7" />
+              </div>
+            </Link>
+            <CardTitle className="text-3xl font-bold">Verifikasi Email</CardTitle>
+            <CardDescription>
+              {isVerifying ? "Sedang memproses tautan Anda..." : "Konfirmasi alamat email Anda"}
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-8 text-center">
+            <AnimatePresence mode="wait">
+              {isVerifying ? (
+                <motion.div
+                  key="verifying"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="py-8 space-y-6"
+                >
+                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                    <Spinner className="w-10 h-10 text-primary" />
+                  </div>
+                  <p className="text-muted-foreground">Harap tunggu, kami sedang memverifikasi akun Anda...</p>
+                </motion.div>
+              ) : status === "success" ? (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="py-8 space-y-6"
+                >
+                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
+                    <CheckCircle2 className="w-12 h-12" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Verifikasi Berhasil!</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Email Anda telah dikonfirmasi. Anda akan diarahkan ke dashboard dalam beberapa detik.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-primary font-bold">
+                    <Spinner className="w-4 h-4" /> Mengalihkan...
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="default"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-8"
+                >
+                  {error && (
+                    <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3 text-left">
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <div className="py-6">
+                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+                      <Mail className="w-10 h-10" />
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {message === "check-email"
+                        ? "Kami telah mengirimkan tautan verifikasi. Silakan cek kotak masuk email Anda."
+                        : "Anda perlu memverifikasi email sebelum dapat melanjutkan."}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Button
+                      onClick={resendVerification}
+                      disabled={isLoading}
+                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
+                    >
+                      {isLoading ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        "Kirim Ulang Email Verifikasi"
+                      )}
+                    </Button>
+                    <Link href="/login" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary gap-2 transition-colors">
+                      <ArrowLeft className="w-4 h-4" /> Kembali ke Login
+                    </Link>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-muted/50 text-xs text-left text-muted-foreground space-y-2">
+                    <p className="font-bold text-foreground flex items-center gap-2 mb-1">
+                      <Info className="w-4 h-4" /> Belum menerima email?
+                    </p>
+                    <p>• Periksa folder spam atau junk email.</p>
+                    <p>• Pastikan email yang didaftarkan sudah benar.</p>
+                    <p>• Tunggu beberapa menit lalu coba kirim ulang.</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
 
-// 2. Export Default dengan Wrapper Suspense
 export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <Spinner className="w-8 h-8 text-green-600" />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Spinner className="w-10 h-10 text-primary" />
         </div>
       }
     >

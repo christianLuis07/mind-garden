@@ -1,4 +1,3 @@
-// src/app/(auth)/forgot-password/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,11 +5,18 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { motion } from "framer-motion";
+import { Sprout, ArrowLeft, Mail, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AuthLayout } from "@/components/layout/auth-layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { authAPI } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
@@ -52,280 +58,136 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  // Success State - Email Sent
   if (isSubmitted) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="min-h-screen relative flex items-center justify-center bg-background overflow-hidden p-4">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px] animate-pulse delay-700" />
+        </div>
 
-        <div className="relative flex items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header Section */}
-            <div className="text-center mb-8 space-y-2">
-              <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Email Terkirim!
-              </h1>
-              <p className="text-gray-600 text-lg">Periksa kotak masuk Anda</p>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-[500px] z-10"
+        >
+          <Card className="glass-card border-none shadow-2xl rounded-[2.5rem] overflow-hidden p-8 text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-8">
+              <CheckCircle2 className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Email Terkirim!</h2>
+            <p className="text-muted-foreground mb-8">
+              Kami telah mengirimkan instruksi pemulihan kata sandi ke <br />
+              <span className="text-foreground font-bold">{submittedEmail}</span>
+            </p>
+            
+            <div className="space-y-4">
+              <Button
+                onClick={() => router.push("/login")}
+                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
+              >
+                Kembali ke Login
+              </Button>
+              <button
+                onClick={() => setIsSubmitted(false)}
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                Gunakan email lain
+              </button>
             </div>
 
-            {/* Glassmorphism Card */}
-            <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
-              <CardHeader className="space-y-1 pb-6">
-                <CardTitle className="text-2xl font-bold text-gray-800 text-center">
-                  <AuthLayout />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {/* Email Icon Illustration */}
-                <div className="text-center py-6">
-                  <div className="w-20 h-20 bg-linear-to-r from-blue-100 to-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                    <svg
-                      className="w-10 h-10 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-gray-700 font-medium mb-3 text-lg">
-                    Tautan Reset Kata Sandi Telah Dikirim
-                  </p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Kami telah mengirim email ke{" "}
-                    <strong className="text-green-700">{submittedEmail}</strong>{" "}
-                    dengan petunjuk untuk mereset kata sandi Anda.
-                  </p>
-                  <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2 rounded-lg text-xs mt-3">
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Tautan akan kedaluwarsa dalam 1 jam
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <Button
-                    onClick={() => router.push("/login")}
-                    className="w-full h-12 cursor-pointer bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300"
-                  >
-                    Kembali ke Login
-                  </Button>
-
-                  <Button
-                    onClick={() => setIsSubmitted(false)}
-                    className="w-full h-12 cursor-pointer bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl border border-gray-200 transition-all duration-300"
-                  >
-                    Gunakan Email Lain
-                  </Button>
-                </div>
-
-                {/* Help Tips */}
-                <div className="bg-blue-50/50 backdrop-blur border border-blue-100 rounded-xl p-4 text-sm">
-                  <p className="text-gray-700 font-medium mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5 text-blue-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Belum menerima email?
-                  </p>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Periksa folder spam atau junk email</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Pastikan alamat email yang dimasukkan benar</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600">•</span>
-                      <span>Tunggu beberapa menit lalu coba kirim ulang</span>
-                    </li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+            <div className="mt-10 p-4 rounded-2xl bg-muted/50 text-xs text-left text-muted-foreground space-y-2">
+              <p className="font-bold text-foreground flex items-center gap-2 mb-1">
+                <Info className="w-4 h-4" /> Belum menerima email?
+              </p>
+              <p>• Periksa folder spam atau promosi.</p>
+              <p>• Pastikan email yang Anda masukkan sudah benar.</p>
+              <p>• Tunggu beberapa menit sebelum mencoba lagi.</p>
+            </div>
+          </Card>
+        </motion.div>
       </div>
     );
   }
 
-  // Default State - Request Reset
   return (
-    <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-green-50 via-emerald-50 to-teal-50">
-      {/* Decorative gradient orbs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-green-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+    <div className="min-h-screen relative flex items-center justify-center bg-background overflow-hidden p-4">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px] animate-pulse delay-700" />
+      </div>
 
-      <div className="relative flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {/* Header Section */}
-          <div className="text-center mb-8 space-y-2">
-            <h1 className="text-4xl font-bold bg-linear-to-r from-green-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Lupa Kata Sandi?
-            </h1>
-            <p className="text-gray-600 text-lg">
-              Jangan khawatir, kami akan membantu Anda
-            </p>
-          </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-[450px] z-10"
+      >
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center space-x-2 group mb-6">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl shadow-primary/20">
+              <Sprout className="text-white w-7 h-7" />
+            </div>
+            <span className="font-bold text-3xl tracking-tight text-foreground">
+              Mind<span className="text-primary">Garden</span>
+            </span>
+          </Link>
+          <h1 className="text-3xl font-bold mb-2">Lupa Kata Sandi?</h1>
+          <p className="text-muted-foreground">Kami akan membantu Anda memulihkannya</p>
+        </div>
 
-          {/* Glassmorphism Card */}
-          <Card className="border border-white/20 shadow-2xl shadow-green-500/10 backdrop-blur-xl bg-white/70 overflow-hidden">
-            <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-800 text-center">
-                <AuthLayout />
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                {/* Error Message */}
-                {error && (
-                  <div className="bg-red-50/80 backdrop-blur border border-red-200/50 text-red-700 px-4 py-3 rounded-xl text-sm shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-start gap-2">
-                      <svg
-                        className="w-5 h-5 shrink-0 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span>{error}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Info Box */}
-                <div className="bg-green-50/50 backdrop-blur border border-green-100 rounded-xl p-4 text-sm">
-                  <div className="flex items-start gap-3">
-                    <svg
-                      className="w-5 h-5 text-green-600 shrink-0 mt-0.5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <div className="text-gray-700">
-                      <p className="font-medium mb-1">Reset kata sandi Anda</p>
-                      <p className="text-xs text-gray-600">
-                        Masukkan alamat email yang terdaftar di akun Anda, dan
-                        kami akan mengirimkan tautan untuk mereset kata sandi.
-                      </p>
-                    </div>
-                  </div>
+        <Card className="glass-card border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardContent className="p-8 pt-10">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {error && (
+                <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
+              )}
 
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-sm font-semibold text-gray-700"
-                  >
-                    Email
-                  </Label>
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-sm text-muted-foreground leading-relaxed">
+                Masukkan email Anda dan kami akan mengirimkan tautan untuk mengatur ulang kata sandi Anda.
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Alamat Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="nama@example.com"
-                    className="h-12 border-gray-200 bg-white/50 backdrop-blur focus:bg-white focus:border-green-500 focus:ring-green-500/20 transition-all duration-200 rounded-xl shadow-sm"
+                    placeholder="nama@email.com"
+                    className="pl-12 h-14 rounded-2xl bg-background/50"
                     {...register("email")}
                   />
-                  {errors.email && (
-                    <p className="text-sm text-red-600/90 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-1 duration-300">
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {errors.email.message}
-                    </p>
-                  )}
                 </div>
+                {errors.email && (
+                  <p className="text-xs text-destructive font-medium ml-1">{errors.email.message}</p>
+                )}
+              </div>
 
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  className="w-full h-12 cursor-pointer bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Spinner className="w-5 h-5" />
-                      Mengirim tautan...
-                    </span>
-                  ) : (
-                    "Kirim Tautan Reset"
-                  )}
-                </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all"
+              >
+                {isLoading ? (
+                  <Spinner className="w-5 h-5" />
+                ) : (
+                  "Kirim Tautan Pemulihan"
+                )}
+              </Button>
 
-                {/* Footer Link */}
-                <div className="pt-2">
-                  <div className="text-center">
-                    <Link
-                      href="/login"
-                      className="text-sm text-green-700 hover:text-green-800 font-medium transition-colors duration-200 hover:underline underline-offset-4 inline-flex items-center gap-2"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                        />
-                      </svg>
-                      Kembali ke Login
-                    </Link>
-                  </div>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              <div className="text-center">
+                <Link href="/login" className="inline-flex items-center text-sm font-bold text-primary hover:underline gap-2">
+                  <ArrowLeft className="w-4 h-4" /> Kembali ke Login
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

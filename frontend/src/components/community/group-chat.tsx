@@ -2,19 +2,22 @@
 
 import { useState, useEffect, useRef } from "react";
 import {
-  Send,
+  SendHorizontal,
   Users,
   ArrowLeft,
   Lock,
   UserPlus,
   X,
   Check,
+  CheckCheck,
   MoreVertical,
   ImagePlus,
+  Info,
+  ShieldCheck,
+  Compass,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Card, CardContent } from "../ui/card";
 import { communityAPI } from "@/lib/community-api";
 import { SupportGroup, SupportGroupMessage } from "@/types/community";
 import { format } from "date-fns";
@@ -22,8 +25,9 @@ import { id } from "date-fns/locale";
 import { GroupInfo } from "./group-info";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
-// [BARU] Import Socket Client
 import { io, Socket } from "socket.io-client";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface GroupChatProps {
   group: SupportGroup;
@@ -47,57 +51,34 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
 
   const [showInfo, setShowInfo] = useState(false);
 
-  // Image Upload State
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // [BARU] Ref untuk menyimpan koneksi socket
   const socketRef = useRef<Socket | null>(null);
-
   const messageEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSelfLeft = () => {
-    onBack();
-  };
-
-  // [BARU] Setup Socket.io
   useEffect(() => {
-    // Ganti URL ini sesuai dengan URL backend-mu.
-    // Jika backend berjalan di port 5000:
     const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
-      ? process.env.NEXT_PUBLIC_API_URL.replace("/api/v1", "") // Hapus suffix API jika ada
+      ? process.env.NEXT_PUBLIC_API_URL.replace("/api/v1", "")
       : "http://localhost:5000";
 
-    // 1. Inisialisasi Socket
     socketRef.current = io(SOCKET_URL, {
-      withCredentials: true, // Penting untuk CORS session/cookies
+      withCredentials: true,
       transports: ["websocket", "polling"],
     });
 
-    // 2. Join Group Room
     socketRef.current.emit("join_group", group.id);
 
-    // 3. Listen Pesan Masuk (Realtime)
-    socketRef.current.on(
-      "receive_message",
-      (incomingMessage: SupportGroupMessage) => {
-        // Update state messages dengan pengecekan duplikasi
-        setMessages((prev) => {
-          // Cek apakah pesan dengan ID ini sudah ada? (Mencegah pesan ganda dari API response + Socket)
-          if (prev.some((msg) => msg.id === incomingMessage.id)) {
-            return prev;
-          }
-          return [...prev, incomingMessage];
-        });
+    socketRef.current.on("receive_message", (incomingMessage: SupportGroupMessage) => {
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === incomingMessage.id)) return prev;
+        return [...prev, incomingMessage];
+      });
+      scrollToBottom();
+    });
 
-        // Auto scroll ke bawah
-        scrollToBottom();
-      }
-    );
-
-    // Cleanup saat user keluar halaman / ganti grup
     return () => {
       if (socketRef.current) {
         socketRef.current.emit("leave_group", group.id);
@@ -109,39 +90,30 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-
       const groupRes = await communityAPI.getSupportGroup(group.id);
       if (groupRes.data.success) {
         const groupData: any = groupRes.data.data;
         const targetGroup = groupData.supportGroup || groupData.group;
-
         if (targetGroup) {
           setIsMember(!!targetGroup.isMember);
           setHasPendingInvite(!!targetGroup.hasPendingInvite);
         }
       }
-
       const msgRes = await communityAPI.getGroupMessages(group.id);
       if (msgRes.data.success) {
         setMessages(msgRes.data.data.messages);
       }
     } catch (error) {
-      console.error("Gagal memuat data:", error);
+      console.error("Gagal memuat data chat");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [group.id]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => { fetchData(); }, [group.id]);
+  useEffect(() => { scrollToBottom(); }, [messages]);
 
   const scrollToBottom = () => {
-    // Tambahkan sedikit delay untuk memastikan DOM render
     setTimeout(() => {
       messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -150,17 +122,8 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      // check size
-      if (file.size > 5242880) {
-        toast.error("Ukuran gambar maksimal 5MB");
-        return;
-      }
-      // check type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Format file tidak didukung");
-        return;
-      }
-      
+      if (file.size > 5242880) { toast.error("Maksimal 5MB"); return; }
+      if (!file.type.startsWith("image/")) { toast.error("Format tidak didukung"); return; }
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -174,53 +137,32 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
 
   const sendMessage = async () => {
     if (!newMessage.trim() && !selectedImage) return;
-
     try {
       setSending(true);
-
       if (selectedImage) {
         const formData = new FormData();
         formData.append("image", selectedImage);
-        
         const response = await communityAPI.sendImageMessage(group.id, formData);
         if (response.data.success) {
-          cancelImage(); // clear image
+          cancelImage();
           const savedMessage = response.data.data.message;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === savedMessage.id)) return prev;
-            return [...prev, savedMessage];
-          });
-          setTimeout(() => inputRef.current?.focus(), 100);
+          setMessages((prev) => prev.some((m) => m.id === savedMessage.id) ? prev : [...prev, savedMessage]);
         }
       } else {
-        // [OPTIMISASI] Kosongkan input segera agar terasa responsif
         const contentToSend = newMessage.trim();
         setNewMessage("");
-
-        const response = await communityAPI.sendMessage(group.id, {
-          content: contentToSend,
-          messageType: "text",
-        });
-
+        const response = await communityAPI.sendMessage(group.id, { content: contentToSend, messageType: "text" });
         if (response.data.success) {
           const savedMessage = response.data.data.message;
-
-          // Tambahkan ke list HANYA JIKA socket belum menambahkannya
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === savedMessage.id)) return prev;
-            return [...prev, savedMessage];
-          });
-
-          setTimeout(() => inputRef.current?.focus(), 100);
+          setMessages((prev) => prev.some((m) => m.id === savedMessage.id) ? prev : [...prev, savedMessage]);
         }
       }
-    } catch (error: any) {
-      console.error("Gagal mengirim pesan:", error);
-      toast.error(error.response?.data?.message || "Gagal mengirim pesan");
-      // Kembalikan teks jika gagal
+    } catch (e) {
+      toast.error("Gagal mengirim");
       if (!selectedImage) setNewMessage(newMessage);
     } finally {
       setSending(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
@@ -231,326 +173,182 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
       if (response.data.success) {
         toast.success("Berhasil bergabung!");
         setIsMember(true);
-        setHasPendingInvite(false);
         fetchData();
       }
-    } catch (error: any) {
-      if (error.response?.data?.message?.includes("sudah menjadi anggota")) {
-        setIsMember(true);
-      } else {
-        toast.error(error.response?.data?.message || "Gagal bergabung");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInviteUser = async () => {
-    if (!inviteEmail.trim()) return;
-    try {
-      setInviting(true);
-      await communityAPI.inviteUser(group.id, inviteEmail);
-      toast.success("Undangan dikirim");
-      setInviteEmail("");
-      setShowInviteForm(false);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Gagal mengirim undangan");
-    } finally {
-      setInviting(false);
-    }
+    } catch (e) { toast.error("Gagal bergabung"); } finally { setLoading(false); }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#efeae2] relative overflow-hidden">
-      {/* Header */}
-      <Card className="rounded-none border-b shadow-sm z-20 bg-white">
-        <CardContent className="p-2 sm:p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 overflow-hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onBack}
-                className="rounded-full shrink-0"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </Button>
-              <div
-                className="flex items-center gap-3 overflow-hidden cursor-pointer hover:bg-gray-50 p-1 pr-4 rounded-lg transition-colors flex-1"
-                onClick={() => isMember && setShowInfo(true)}
-              >
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 shrink-0">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <div className="truncate">
-                  <h2 className="font-semibold text-gray-900 leading-tight flex items-center gap-2 truncate text-sm sm:text-base">
-                    {group.name}
-                    {!group.isPublic && (
-                      <Lock className="w-3 h-3 text-gray-400 shrink-0" />
-                    )}
-                  </h2>
-                  <p className="text-xs text-gray-500 truncate">
-                    {isMember
-                      ? "Ketuk untuk info grup"
-                      : group.isPublic
-                      ? "Grup Publik"
-                      : "Grup Privat"}
-                  </p>
+    <div className="flex flex-col h-full bg-muted/20 rounded-[3rem] overflow-hidden border border-border/40 shadow-2xl relative">
+      {/* Dynamic Background Patterns */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: "radial-gradient(#7A9A7E 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+
+      {/* Chat Header */}
+      <div className="z-20 bg-card/60 backdrop-blur-xl border-b border-border/40 p-4 md:p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <button onClick={onBack} className="p-2 hover:bg-primary/10 rounded-full transition-colors text-muted-foreground hover:text-primary">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => isMember && setShowInfo(true)}>
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/10 group-hover:rotate-6 transition-transform">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-bold text-foreground text-base flex items-center gap-2">
+                  {group.name}
+                  {!group.isPublic && <Lock className="w-3 h-3 text-muted-foreground/50" />}
+                </h2>
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                     {group.isPublic ? "Ruang Publik" : "Ruang Privat"}
+                   </p>
                 </div>
               </div>
-
-              {showInviteForm ? (
-                <div className="flex items-center gap-2 animate-in fade-in flex-1">
-                  <Input
-                    placeholder="Email teman..."
-                    className="h-9 text-sm"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    autoFocus
-                  />
-                  <Button
-                    size="icon"
-                    className="h-9 w-9 bg-green-600 shrink-0"
-                    onClick={handleInviteUser}
-                    disabled={inviting}
-                  >
-                    <Check className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-9 w-9 shrink-0"
-                    onClick={() => setShowInviteForm(false)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 overflow-hidden">
-                  {/* Placeholder */}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-1 shrink-0">
-              {isMember && !showInviteForm && !group.isPublic && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowInviteForm(true)}
-                >
-                  <UserPlus className="w-5 h-5 text-gray-600" />
-                </Button>
-              )}
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-5 h-5 text-gray-600" />
-              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* MAIN CONTAINER */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* KOLOM CHAT */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#efeae2] relative">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 relative">
-            <div
-              className="absolute inset-0 opacity-5 pointer-events-none"
-              style={{
-                backgroundImage:
-                  "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')",
-              }}
-            ></div>
-
-            {messages.map((message) => {
-              const isMine =
-                message.userId === currentUserId ||
-                message.user?.id === currentUserId;
-              const isSystem = message.messageType === "system";
-
-              if (isSystem) {
-                return (
-                  <div
-                    key={message.id}
-                    className="flex justify-center my-4 relative z-10"
-                  >
-                    <span className="bg-[#e6f2fb] text-gray-600 text-[10px] sm:text-xs px-3 py-1 rounded-lg shadow-sm uppercase font-medium tracking-wide border border-blue-100">
-                      {message.content}
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={message.id}
-                  className={`flex relative z-10 ${
-                    isMine ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`
-                        relative max-w-[80%] sm:max-w-[65%] px-3 py-2 text-sm shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]
-                        ${
-                          isMine
-                            ? "bg-[#d9fdd3] rounded-lg rounded-tr-none text-gray-900"
-                            : "bg-white rounded-lg rounded-tl-none text-gray-900"
-                        }
-                        `}
-                  >
-                    {!isMine && (
-                      <p className="text-[11px] font-bold text-orange-600 mb-0.5 leading-none">
-                        {message.user?.name || "Member"}
-                      </p>
-                    )}
-
-                    {message.messageType === "image" && message.imageUrl ? (
-                      <div className="mb-1 mt-1">
-                        <img 
-                          src={message.imageUrl} 
-                          alt="Shared image" 
-                          className="rounded-md max-w-full h-auto object-cover max-h-64 sm:max-h-72 border border-black/5" 
-                        />
-                      </div>
-                    ) : (
-                      <p className="leading-relaxed whitespace-pre-wrap wrap-break-word text-sm">
-                        {message.content}
-                      </p>
-                    )}
-
-                    <div
-                      className={`text-[10px] mt-1 flex items-center gap-1 ${
-                        isMine
-                          ? "justify-end text-green-800/60"
-                          : "justify-end text-gray-400"
-                      }`}
-                    >
-                      <span>
-                        {format(new Date(message.createdAt), "HH:mm", {
-                          locale: id,
-                        })}
-                      </span>
-                      {isMine && <Check className="w-3 h-3" />}
-                    </div>
-
-                    <div
-                      className={`absolute top-0 w-0 h-0 border-[6px] border-transparent 
-                        ${
-                          isMine
-                            ? "-right-1.5 border-t-[#d9fdd3] border-l-[#d9fdd3]"
-                            : "-left-1.5 border-t-white border-r-white"
-                        }`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            <div ref={messageEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="p-2 sm:p-3 bg-[#f0f2f5] z-20 sticky bottom-0">
-            {isMember ? (
-              <div className="flex flex-col gap-2 max-w-4xl mx-auto w-full">
-                {/* Preview Image */}
-                {imagePreview && (
-                  <div className="relative inline-block self-start ml-12">
-                    <img src={imagePreview} alt="Preview" className="h-24 sm:h-32 rounded-lg object-cover border-2 border-white shadow-md" />
-                    <button onClick={cancelImage} disabled={sending} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 transition-colors z-10">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-end gap-2 w-full">
-                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
-                  <Button type="button" variant="ghost" size="icon" disabled={sending} className="shrink-0 h-11 w-11 rounded-full bg-white hover:bg-gray-100 shadow-sm border border-gray-100" onClick={() => fileInputRef.current?.click()}>
-                    <ImagePlus className="w-5 h-5 text-gray-500" />
-                  </Button>
-                  <div className="flex-1 bg-white rounded-2xl flex items-center px-4 py-2 shadow-sm border border-gray-100 min-h-11">
-                    <Input
-                      ref={inputRef}
-                      placeholder={selectedImage ? "Gambar siap dikirim..." : "Ketik pesan..."}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      disabled={sending || !!selectedImage}
-                      className="border-none shadow-none focus-visible:ring-0 p-0 h-auto max-h-32 min-h-6 resize-none bg-transparent text-gray-800 placeholder:text-gray-400"
-                      autoComplete="off"
-                    />
-                  </div>
-                  <Button
-                    onClick={sendMessage}
-                    disabled={(!newMessage.trim() && !selectedImage) || sending}
-                    className={`h-11 w-11 rounded-full shrink-0 shadow-sm transition-all flex items-center justify-center ${
-                      newMessage.trim() || selectedImage
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-gray-300"
-                    }`}
-                  >
-                    {sending ? (
-                      <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <Send className="w-5 h-5 text-white" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm text-center mx-auto max-w-lg">
-                {group.isPublic ? (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm text-gray-500">
-                      Bergabung untuk berinteraksi di grup ini.
-                    </p>
-                    <Button
-                      onClick={handleJoinGroup}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      Gabung Komunitas
-                    </Button>
-                  </div>
-                ) : hasPendingInvite ? (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm text-gray-500">
-                      Anda memiliki undangan pending.
-                    </p>
-                    <Button
-                      onClick={handleJoinGroup}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      Terima Undangan
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2 text-gray-400 py-1">
-                    <Lock className="w-4 h-4" />
-                    <span className="text-sm">
-                      Grup Privat (Memerlukan Undangan)
-                    </span>
-                  </div>
-                )}
-              </div>
+          <div className="flex items-center gap-2">
+            {isMember && (
+              <Button variant="ghost" size="icon" onClick={() => setShowInfo(true)} className="rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10">
+                <Info className="w-5 h-5" />
+              </Button>
             )}
+            <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
           </div>
         </div>
+      </div>
 
-        {showInfo && (
-          <GroupInfo
-            group={group}
-            onClose={() => setShowInfo(false)}
-            onLeaveGroup={handleSelfLeft}
-          />
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 relative z-10 custom-scrollbar">
+        {messages.map((message, idx) => {
+          const isMine = message.userId === currentUserId || message.user?.id === currentUserId;
+          const isSystem = message.messageType === "system";
+
+          if (isSystem) {
+            return (
+              <div key={message.id} className="flex justify-center my-6">
+                <span className="bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-primary/10 shadow-sm">
+                  {message.content}
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              key={message.id}
+              className={cn("flex flex-col", isMine ? "items-end" : "items-start")}
+            >
+              <div className={cn(
+                "max-w-[85%] md:max-w-[70%] rounded-[2rem] p-4 md:p-6 shadow-xl relative transition-all duration-300",
+                isMine 
+                  ? "bg-primary text-white rounded-tr-none shadow-primary/10" 
+                  : "bg-card text-foreground rounded-tl-none shadow-black/5"
+              )}>
+                {!isMine && (
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">
+                    {message.user?.name || "Teman Cerita"}
+                  </p>
+                )}
+
+                {message.messageType === "image" && message.imageUrl ? (
+                  <div className="mb-2 overflow-hidden rounded-2xl border border-white/10 shadow-inner">
+                    <img src={message.imageUrl} alt="Shared" className="w-full h-auto max-h-80 object-cover hover:scale-105 transition-transform duration-700 cursor-pointer" />
+                  </div>
+                ) : (
+                  <p className="text-sm md:text-base leading-relaxed font-medium">
+                    {message.content}
+                  </p>
+                )}
+
+                <div className={cn(
+                  "flex items-center gap-1.5 mt-2 opacity-60 text-[10px] font-bold uppercase",
+                  isMine ? "justify-end text-white" : "justify-start text-muted-foreground"
+                )}>
+                  <span>{format(new Date(message.createdAt), "HH:mm")}</span>
+                  {isMine && <CheckCheck className="w-3 h-3" />}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+        <div ref={messageEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="p-4 md:p-8 bg-card/40 backdrop-blur-xl border-t border-border/40 z-20">
+        {isMember ? (
+          <div className="max-w-4xl mx-auto space-y-4">
+            <AnimatePresence>
+              {imagePreview && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className="relative inline-block ml-16">
+                  <div className="h-28 w-28 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                  <button onClick={cancelImage} className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 shadow-xl hover:scale-110 transition-all">
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex items-center gap-3">
+              <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-14 h-14 shrink-0 rounded-full bg-card shadow-lg border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:scale-110 transition-all"
+              >
+                <ImagePlus className="w-6 h-6" />
+              </button>
+              
+              <div className="flex-1 relative group">
+                <Input
+                  ref={inputRef}
+                  placeholder={selectedImage ? "Gambar terpilih..." : "Ketik pesan di sini..."}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={sending}
+                  className="h-14 px-8 bg-card/80 border-none rounded-full shadow-lg focus:ring-2 focus:ring-primary/20 transition-all italic text-base"
+                />
+              </div>
+
+              <button
+                onClick={sendMessage}
+                disabled={(!newMessage.trim() && !selectedImage) || sending}
+                className={cn(
+                  "w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-xl transition-all",
+                  (newMessage.trim() || selectedImage) ? "bg-primary text-white scale-110" : "bg-muted text-muted-foreground"
+                )}
+              >
+                {sending ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <SendHorizontal className="w-6 h-6 ml-1" />}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto py-4">
+             <div className="glass-card p-6 rounded-[2rem] border-none shadow-xl text-center space-y-4">
+                <ShieldCheck className="w-10 h-10 text-primary mx-auto opacity-40" />
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Akses Ruang Terbatas</p>
+                <Button onClick={handleJoinGroup} className="w-full h-14 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20">
+                   Gabung ke Ruang Ini
+                </Button>
+             </div>
+          </div>
         )}
       </div>
+
+      {showInfo && <GroupInfo group={group} onClose={() => setShowInfo(false)} onLeaveGroup={() => { setShowInfo(false); onBack(); }} />}
     </div>
   );
 }

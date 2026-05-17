@@ -1,70 +1,15 @@
 const { prisma } = require("../config/database");
-const fs = require("fs");
-const path = require("path");
-const { v4: uuidv4 } = require("uuid"); // Pastikan install: npm install uuid
+const { sanitizeContent } = require("../utils/sanitizer");
+const fileUploadService = require("./fileUploadService");
 
 class JournalService {
-  async saveFiles(files) {
-    console.log("=== DEBUG UPLOAD START ===");
-    console.log("1. Cek CWD (Lokasi Server Berjalan):", process.cwd());
-
-    if (!files || files.length === 0) {
-      console.log(
-        "2. PERINGATAN: Tidak ada file yang diterima service (files array kosong/null)"
-      );
-      console.log("=== DEBUG UPLOAD END ===");
-      return [];
-    }
-
-    console.log(`2. Menerima ${files.length} file untuk disimpan.`);
-
-    // Gunakan path absolute
-    const uploadDir = path.join(process.cwd(), "uploads", "journal");
-    console.log("3. Target Folder Penyimpanan:", uploadDir);
-
-    // Buat folder jika belum ada
-    if (!fs.existsSync(uploadDir)) {
-      console.log("4. Folder belum ada. Membuat folder...");
-      try {
-        fs.mkdirSync(uploadDir, { recursive: true });
-        console.log("   - Folder berhasil dibuat.");
-      } catch (err) {
-        console.error("   - ERROR Gagal membuat folder:", err);
-      }
-    } else {
-      console.log("4. Folder sudah ada.");
-    }
-
-    const savedFilePaths = [];
-
-    for (const file of files) {
-      try {
-        const safeName = uuidv4() + path.extname(file.originalname);
-        const filepath = path.join(uploadDir, safeName);
-
-        console.log(`5. Menyimpan file ke disk: ${filepath}`);
-        await fs.promises.writeFile(filepath, file.buffer);
-        console.log("   - Sukses tulis ke disk.");
-
-        savedFilePaths.push(`/uploads/journal/${safeName}`);
-      } catch (err) {
-        console.error("   - ERROR saat menulis file:", err);
-      }
-    }
-
-    console.log("=== DEBUG UPLOAD END ===");
-    return savedFilePaths;
-  }
-
   async createJournalEntry(userId, journalData, files) {
-    const { title, content, tags, isPublic } = journalData;
+    const title = journalData.title ? sanitizeContent(journalData.title) : "";
+    const content = sanitizeContent(journalData.content || "");
+    const { tags, isPublic } = journalData;
 
-    let imageUrls = [];
-    try {
-      imageUrls = await this.saveFiles(files);
-    } catch (error) {
-      console.error("Gagal menyimpan file:", error);
-    }
+    // Ambil URL dari Cloudinary yang sudah diproses oleh multer
+    const imageUrls = files ? files.map((file) => file.path) : [];
 
     const sentiment = this.analyzeSentiment(content);
 
@@ -98,11 +43,8 @@ class JournalService {
       throw error;
     }
 
-    // 2. Upload gambar baru kalau ada
-    let newImages = [];
-    if (files && files.length > 0) {
-      newImages = await this.saveFiles(files);
-    }
+    // 2. Ambil URL gambar baru dari Cloudinary (multer)
+    const newImages = files ? files.map((file) => file.path) : [];
 
     // 3. Filter field yang boleh diupdate
     const allowedUpdates = ["title", "content", "tags", "isPublic"];
@@ -111,11 +53,14 @@ class JournalService {
       .reduce((obj, key) => {
         if (key === "isPublic") {
           obj[key] = updateData[key] === "true" || updateData[key] === true;
+        } else if (key === "title" || key === "content") {
+          obj[key] = sanitizeContent(updateData[key]);
         } else {
           obj[key] = updateData[key];
         }
         return obj;
       }, {});
+
 
     // 4. Analisis sentiment kalau content diupdate
     if (filteredData.content) {
@@ -148,6 +93,7 @@ class JournalService {
     }
 
     const imagePath = currentImages[imageIndex];
+    
     // Hapus dari array database
     const updatedImages = currentImages.filter(
       (_, index) => index !== parseInt(imageIndex)
@@ -158,17 +104,15 @@ class JournalService {
       data: { images: updatedImages },
     });
 
-    // Hapus file fisik dari disk
-    const cleanPath = imagePath.startsWith("/")
-      ? imagePath.substring(1)
-      : imagePath;
-    const fullPath = path.join(process.cwd(), cleanPath);
-
-    if (fs.existsSync(fullPath)) {
+    // Hapus dari Cloudinary jika URL-nya dari sana
+    if (imagePath.includes("cloudinary.com")) {
       try {
-        fs.unlinkSync(fullPath);
+        const publicId = fileUploadService.extractPublicId(imagePath);
+        if (publicId) {
+          await fileUploadService.deleteImage(publicId);
+        }
       } catch (e) {
-        console.error("Gagal hapus file fisik:", e);
+        console.error("Gagal hapus file Cloudinary:", e);
       }
     }
 
@@ -272,19 +216,30 @@ class JournalService {
     if (!journalEntry) throw new Error("Journal entry not found");
 
     if (journalEntry.images && journalEntry.images.length > 0) {
-      journalEntry.images.forEach((imagePath) => {
-        const cleanPath = imagePath.startsWith("/")
-          ? imagePath.substring(1)
-          : imagePath;
-        const fullPath = path.join(process.cwd(), cleanPath);
-        if (fs.existsSync(fullPath)) {
+      const path = require("path");
+      const fs = require("fs");
+      for (const imagePath of journalEntry.images) {
+        if (imagePath.includes("cloudinary.com")) {
           try {
-            fs.unlinkSync(fullPath);
+            const publicId = fileUploadService.extractPublicId(imagePath);
+            if (publicId) {
+              await fileUploadService.deleteImage(publicId);
+            }
           } catch (e) {
-            console.error("Error delete file:", e);
+            console.error("Error delete Cloudinary file:", e);
+          }
+        } else if (imagePath.startsWith("/uploads/journal/")) {
+          try {
+            const fileName = path.basename(imagePath);
+            const fullPath = path.join(process.cwd(), "uploads", "journal", fileName);
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+            }
+          } catch (e) {
+            console.error("Error delete legacy local file:", e);
           }
         }
-      });
+      }
     }
     await prisma.journalEntry.delete({ where: { id: entryId } });
     return { message: "Journal entry deleted successfully" };

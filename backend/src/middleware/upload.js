@@ -9,8 +9,8 @@ const {
 
 // File filter
 const fileFilter = (req, file, cb) => {
-  // check tipe file
-  const allowedTypes = [
+  // check tipe file berdasarkan mimetype
+  const allowedMimetypes = [
     "image/jpeg",
     "image/jpg",
     "image/png",
@@ -18,10 +18,14 @@ const fileFilter = (req, file, cb) => {
     "image/webp",
   ];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  // check ekstensi file
+  const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  if (allowedMimetypes.includes(file.mimetype) && allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error("Tipe file tidak didukung"), false);
+    cb(new Error("Tipe file tidak didukung atau ekstensi tidak valid"), false);
   }
 };
 

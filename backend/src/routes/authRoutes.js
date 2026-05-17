@@ -6,17 +6,25 @@ const {
   updateProfile,
   setupTotp,
   verifyTotp,
-  validateTotpLogin,
+  changePassword,
+  deleteAccount,
 } = require("../controllers/authController");
 const { auth } = require("../middleware/auth");
 const { validateRegister, validateLogin } = require("../middleware/validation");
+
+const {
+  uploadAvatar,
+  handleUploadError,
+} = require("../middleware/upload");
 
 const router = express.Router();
 
 router.post("/register", validateRegister, register);
 router.post("/login", validateLogin, login);
 router.get("/me", auth, getMe);
-router.put("/profile", auth, updateProfile);
+router.put("/profile", auth, uploadAvatar.single("avatar"), handleUploadError, updateProfile);
+router.put("/change-password", auth, changePassword);
+router.delete("/delete-account", auth, deleteAccount);
 
 // TOTP routes
 router.post("/totp/setup", auth, setupTotp);

@@ -31,7 +31,7 @@ export function TestimonialCard({
 
       {/* Content */}
       <blockquote className="text-gray-700 mb-6 leading-relaxed italic">
-        "{content}"
+        &quot;{content}&quot;
       </blockquote>
 
       {/* Author */}

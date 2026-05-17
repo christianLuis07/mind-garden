@@ -55,8 +55,16 @@ export const authAPI = {
   getMe: () => api.get<ApiResponse<{ user: any }>>("/auth/me"),
 
   // updateUser api
-  updateProfile: (data: { name?: string; avatar?: string }) =>
-    api.put<ApiResponse<{ user: any }>>("/auth/profile", data),
+  updateProfile: (data: FormData) =>
+    api.put<ApiResponse<{ user: any }>>("/auth/profile", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
+  changePassword: (data: any) =>
+    api.put<ApiResponse>("/auth/change-password", data),
+
+  deleteAccount: () =>
+    api.delete<ApiResponse>("/auth/delete-account"),
 
   // verifyUser api
   verifyEmail: (token: string) =>

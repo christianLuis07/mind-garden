@@ -20,12 +20,6 @@ class AuthService {
       expiresIn: process.env.JWT_EXPIRES_IN || "30d",
     });
   }
-
-  generateToken(userId) {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "30d",
-    });
-  }
   async register(userData) {
     const { email, password, name } = userData;
 
@@ -348,24 +342,26 @@ class AuthService {
 
   async updateProfile(userId, updateData, file) {
     try {
-      let avatarUrl = updateData.avatar;
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new Error("User tidak ditemukan");
 
-      // jika avatar baru berhasil diupload
+      let avatarUrl = user.avatar;
+
+      // jika avatar baru berhasil diupload (sudah dihandle oleh multer-storage-cloudinary)
       if (file) {
-        // hapus avatar lama jika ada
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (user.avatar) {
+        // hapus avatar lama dari Cloudinary jika ada
+        if (user.avatar && user.avatar.includes("cloudinary.com")) {
           const oldPublicId = fileUploadService.extractPublicId(user.avatar);
           if (oldPublicId) {
             await fileUploadService.deleteImage(oldPublicId);
           }
         }
 
-        //upload avatar baru
-        avatarUrl = await fileUploadService.uploadAvatar(file, userId);
+        // URL avatar baru adalah path dari file yang sudah diupload multer ke Cloudinary
+        avatarUrl = file.path;
       }
 
-      const allowedUpdates = ["name", "avatar"];
+      const allowedUpdates = ["name"];
       const filteredData = Object.keys(updateData)
         .filter((key) => allowedUpdates.includes(key))
         .reduce((obj, key) => {
@@ -373,12 +369,10 @@ class AuthService {
           return obj;
         }, {});
 
-      // Update avatar url jika avatar baru berhasil diupload
-      if (avatarUrl) {
-        filteredData.avatar = avatarUrl;
-      }
+      // Update avatar url
+      filteredData.avatar = avatarUrl;
 
-      const user = await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: filteredData,
         select: {
@@ -393,10 +387,55 @@ class AuthService {
         },
       });
 
-      return user;
+      return updatedUser;
     } catch (error) {
       throw new Error(`Profile Upload Gagal: ${error.message}`);
     }
+  }
+  async changePassword(userId, oldPassword, newPassword) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User tidak ditemukan");
+
+    // check old password
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordMatch) {
+      throw new Error("Kata sandi lama salah");
+    }
+
+    // hash new password
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return { message: "Kata sandi berhasil diubah" };
+  }
+
+  async deleteAccount(userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User tidak ditemukan");
+
+    // Hapus avatar dari Cloudinary jika ada
+    if (user.avatar && user.avatar.includes("cloudinary.com")) {
+      try {
+        const publicId = fileUploadService.extractPublicId(user.avatar);
+        if (publicId) {
+          await fileUploadService.deleteImage(publicId);
+        }
+      } catch (e) {
+        console.error("Gagal hapus avatar saat delete account:", e);
+      }
+    }
+
+    // Hapus user (Prisma cascade akan menangani relasi jika dikonfigurasi, atau kita hapus manual)
+    // Berdasarkan schema.prisma, relasi biasanya di-handle oleh onDelete: Cascade
+    await prisma.user.delete({ where: { id: userId } });
+
+    return { message: "Akun berhasil dihapus selamanya" };
   }
 }
 

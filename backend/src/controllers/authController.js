@@ -33,7 +33,7 @@ const getMe = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
-    const user = await authService.updateProfile(req.user.id, req.body);
+    const user = await authService.updateProfile(req.user.id, req.body, req.file);
 
     successResponse(res, "Profile updated successfully", { user });
   } catch (error) {
@@ -70,6 +70,25 @@ const validateTotpLogin = async (req, res, next) => {
   }
 };
 
+const changePassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const result = await authService.changePassword(req.user.id, oldPassword, newPassword);
+    successResponse(res, "Kata sandi berhasil diubah", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteAccount = async (req, res, next) => {
+  try {
+    const result = await authService.deleteAccount(req.user.id);
+    successResponse(res, "Akun berhasil dihapus", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -78,4 +97,6 @@ module.exports = {
   setupTotp,
   verifyTotp,
   validateTotpLogin,
+  changePassword,
+  deleteAccount,
 };

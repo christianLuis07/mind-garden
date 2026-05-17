@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { PlayCircle, PauseCircle, RotateCcw, Volume2, VolumeX, ArrowLeft, CheckCircle2, Sparkles, Wind, Waves } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BreathingTechnique } from "@/types/breathing";
 import { breathingAPI } from "@/lib/breathing-api";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface BreathingTimerProps {
   technique: BreathingTechnique;
@@ -35,37 +37,40 @@ export function BreathingTimer({
   const phaseConfig = {
     inhale: {
       duration: technique.pattern.inhale,
-      color: "bg-green-500",
+      color: "bg-primary",
+      glow: "shadow-[0_0_50px_rgba(122,154,126,0.4)]",
       text: "Tarik Napas",
-      instruction: "Tarik napas perlahan melalui hidung",
+      instruction: "Hirup ketenangan melalui hidung",
+      scale: 1.4,
     },
     hold: {
       duration: technique.pattern.hold,
-      color: "bg-blue-500",
+      color: "bg-secondary",
+      glow: "shadow-[0_0_50px_rgba(233,220,201,0.4)]",
       text: "Tahan",
-      instruction: "Tahan napas sejenak",
+      instruction: "Rasakan udara memenuhi dirimu",
+      scale: 1.4,
     },
     exhale: {
       duration: technique.pattern.exhale,
-      color: "bg-purple-500",
-      text: "Buang Napas",
-      instruction: "Hembuskan perlahan melalui mulut",
+      color: "bg-primary/60",
+      glow: "shadow-[0_0_50px_rgba(122,154,126,0.2)]",
+      text: "Hembuskan",
+      instruction: "Lepaskan semua beban perlahan",
+      scale: 1.0,
     },
     holdAfterExhale: {
       duration: technique.pattern.holdAfterExhale,
-      color: "bg-gray-500",
+      color: "bg-slate-400/40",
+      glow: "shadow-[0_0_50px_rgba(148,163,184,0.2)]",
       text: "Tahan",
-      instruction: "Tetap rileks dan tahan napas",
+      instruction: "Nikmati keheningan sejenak",
+      scale: 1.0,
     },
   };
 
   const moveToNextPhase = () => {
-    const phases: TimerPhase[] = [
-      "inhale",
-      "hold",
-      "exhale",
-      "holdAfterExhale",
-    ];
+    const phases: TimerPhase[] = ["inhale", "hold", "exhale", "holdAfterExhale"];
     const currentIndex = phases.indexOf(currentPhase);
     const nextIndex = (currentIndex + 1) % phases.length;
     const nextPhase = phases[nextIndex];
@@ -81,113 +86,70 @@ export function BreathingTimer({
 
   const playPhaseSound = (phase: TimerPhase) => {
     if (!isSoundEnabled || !audioContextRef.current) return;
-
     try {
       if (oscillatorRef.current) {
         oscillatorRef.current.stop();
         oscillatorRef.current.disconnect();
       }
-
       const audioContext = audioContextRef.current;
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-
       let frequency = 200;
       let duration = 0.3;
-
       switch (phase) {
-        case "inhale":
-          frequency = 300;
-          break;
-        case "exhale":
-          frequency = 150;
-          break;
+        case "inhale": frequency = 280; break;
+        case "exhale": frequency = 180; break;
         case "hold":
-        case "holdAfterExhale":
-          frequency = 250;
-          duration = 0.1;
-          break;
+        case "holdAfterExhale": frequency = 240; duration = 0.1; break;
       }
-
       oscillator.type = "sine";
       oscillator.frequency.value = frequency;
-
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.01,
-        audioContext.currentTime + duration
-      );
-
+      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-
       oscillator.start();
       oscillator.stop(audioContext.currentTime + duration);
-
       oscillatorRef.current = oscillator;
-    } catch (error) {
-      console.error("Error playing sound:", error);
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
-    // Initialize audio context on user interaction
     const initAudio = () => {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext ||
-          (window as any).webkitAudioContext)();
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
     };
-
-    document.addEventListener("click", initAudio, { once: true });
-
+    document.addEventListener("mousedown", initAudio, { once: true });
     return () => {
-      document.removeEventListener("click", initAudio);
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      document.removeEventListener("mousedown", initAudio);
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (audioContextRef.current) audioContextRef.current.close();
     };
   }, []);
 
   useEffect(() => {
     if (!isPlaying) return;
-
     timerRef.current = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
           moveToNextPhase();
           return phaseConfig[currentPhase].duration;
         }
-        return prevTime - 1;
+        return prev - 1;
       });
-
       setTotalTime((prev) => prev + 1);
     }, 1000);
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [isPlaying, currentPhase]);
 
   const startTimer = () => {
     setIsPlaying(true);
-    setTimeLeft(phaseConfig.inhale.duration);
-    setCurrentPhase("inhale");
-    playPhaseSound("inhale");
+    if (timeLeft === 0) setTimeLeft(phaseConfig.inhale.duration);
+    playPhaseSound(currentPhase);
   };
 
-  const pauseTimer = () => {
-    setIsPlaying(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
+  const pauseTimer = () => setIsPlaying(false);
 
   const resetTimer = () => {
     pauseTimer();
@@ -197,259 +159,228 @@ export function BreathingTimer({
     setTotalTime(0);
   };
 
-  const handleComplete = async (duration: number, calmLevel?: number) => {
-    pauseTimer();
-
-    console.log("Session completed:", {
-      duration,
-      calmLevel,
-      technique: technique.name,
-    });
-
+  const handleSaveSession = async (rating?: number) => {
     try {
-      const response = await breathingAPI.createSession({
-        duration,
+      await breathingAPI.createSession({
+        duration: totalTime,
         technique: technique.name,
-        calmLevel,
+        calmLevel: rating,
       });
-
-      console.log("Session saved:", response.data);
-    } catch (error) {
-      console.error("Failed to save session:", error);
-    }
-
-    onComplete(duration, calmLevel);
-  };
-
-  const handleCompleteClick = () => {
-    pauseTimer();
-    setShowRating(true);
-  };
-
-  const submitRating = () => {
-    if (selectedRating !== null) {
-      saveSession(totalTime, selectedRating);
-    } else {
-      saveSession(totalTime);
-    }
-  };
-
-  const saveSession = async (duration: number, calmLevel?: number) => {
-    console.log("Session completed:", {
-      duration,
-      calmLevel,
-      technique: technique.name,
-    });
-
-    try {
-      const response = await breathingAPI.createSession({
-        duration,
-        technique: technique.name,
-        calmLevel,
-      });
-
-      console.log("Session saved:", response.data);
-    } catch (error) {
-      console.error("Failed to save session:", error);
-    }
-
-    onComplete(duration, calmLevel);
+    } catch (e) {}
+    onComplete(totalTime, rating);
   };
 
   const currentConfig = phaseConfig[currentPhase];
-  const progress = (timeLeft / currentConfig.duration) * 100;
 
   if (showRating) {
     return (
-      <div className="max-w-2xl mx-auto text-center space-y-8 py-8 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Latihan Selesai!</h2>
-        <p className="text-gray-600 mb-8">Kerja bagus. Seberapa tenang perasaanmu setelah melakukan sesi ini?</p>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-xl mx-auto text-center space-y-10 py-12 glass-card rounded-[3rem] p-10 border-none shadow-2xl shadow-primary/5"
+      >
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
+          <CheckCircle2 className="w-12 h-12" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Sesi Selesai</h2>
+          <p className="text-muted-foreground font-medium italic">Bagaimana perasaanmu sekarang?</p>
+        </div>
         
-        <div className="flex justify-center flex-wrap gap-2 max-w-md mx-auto">
+        <div className="flex justify-center flex-wrap gap-3">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
             <button
               key={num}
               onClick={() => setSelectedRating(num)}
-              className={`w-12 h-12 rounded-full text-lg font-semibold transition-all ${
+              className={cn(
+                "w-12 h-12 rounded-2xl text-sm font-bold transition-all duration-300",
                 selectedRating === num
-                  ? "bg-green-600 text-white shadow-lg scale-110"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+                  ? "bg-primary text-white shadow-xl scale-110"
+                  : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+              )}
             >
               {num}
             </button>
           ))}
         </div>
         
-        <div className="flex justify-between items-center max-w-md mx-auto px-2 text-sm text-gray-500 font-medium">
-          <span>1 - Kurang Tenang</span>
-          <span>10 - Sangat Tenang</span>
+        <div className="flex justify-between items-center px-4 text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/60">
+          <span>Kurang Tenang</span>
+          <span>Sangat Tenang</span>
         </div>
         
-        <div className="flex justify-center space-x-4 pt-8">
-           <Button variant="outline" onClick={() => saveSession(totalTime)}>
+        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+           <Button variant="ghost" onClick={() => handleSaveSession()} className="flex-1 h-14 rounded-2xl font-bold">
              Lewati
            </Button>
-           <Button onClick={submitRating} disabled={selectedRating === null} className="bg-green-600 hover:bg-green-700 px-8">
+           <Button 
+             onClick={() => handleSaveSession(selectedRating || undefined)} 
+             disabled={selectedRating === null} 
+             className="flex-1 h-14 rounded-2xl bg-primary text-white font-bold shadow-xl shadow-primary/20"
+           >
              Simpan Penilaian
            </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          {technique.name}
-        </h2>
-        <p className="text-gray-600">Ikuti panduan pola pernapasan</p>
-      </div>
-
-      {/* Breathing Visual */}
-      <div className="flex justify-center">
-        <div className="relative w-64 h-64">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className={`rounded-full transition-all duration-1000 ease-in-out ${
-                currentPhase === "inhale"
-                  ? "w-48 h-48 opacity-100"
-                  : currentPhase === "exhale"
-                  ? "w-32 h-32 opacity-80"
-                  : "w-40 h-40 opacity-90"
-              } ${currentConfig.color}`}
-              style={{
-                transition: "all 1s ease-in-out",
-              }}
-            />
-          </div>
-
-          {/* Progress Indicator */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-56 h-56 rounded-full border-4 border-gray-200">
-              <div
-                className="w-full h-full rounded-full border-4 border-green-500 border-t-transparent border-r-transparent transition-all duration-1000 ease-linear"
-                style={{
-                  transform: `rotate(${360 - (progress / 100) * 360}deg)`,
-                }}
+    <div className="max-w-2xl mx-auto flex flex-col items-center">
+      {/* Immersive Timer UI */}
+      <div className="relative w-80 h-80 md:w-[400px] md:h-[400px] flex items-center justify-center mb-16">
+        {/* Background Ripple Animation */}
+        <AnimatePresence>
+          {isPlaying && (
+            <>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 2, opacity: 0 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
+                className={cn("absolute inset-0 rounded-full border-2 border-primary/20", currentConfig.color.replace('bg-', 'border-'))}
               />
-            </div>
-          </div>
-
-          {/* Center Content */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2 text-gray-800">
-                {timeLeft}s
-              </div>
-              <div className="text-lg font-semibold text-gray-700">
-                {currentConfig.text}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">
-                {currentConfig.instruction}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 text-center">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-gray-900">{cycleCount}</div>
-          <div className="text-sm text-gray-600">Siklus</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-gray-900">
-            {Math.floor(totalTime / 60)}:
-            {(totalTime % 60).toString().padStart(2, "0")}
-          </div>
-          <div className="text-sm text-gray-600">Durasi</div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-gray-900 capitalize">
-            {technique.difficulty}
-          </div>
-          <div className="text-sm text-gray-600">Level</div>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex justify-center space-x-4">
-        <Button
-          variant="outline"
-          onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-        >
-          {isSoundEnabled ? (
-            <Volume2 className="w-4 h-4" />
-          ) : (
-            <VolumeX className="w-4 h-4" />
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 2.5, opacity: 0 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 1 }}
+                className={cn("absolute inset-0 rounded-full border-2 border-primary/10", currentConfig.color.replace('bg-', 'border-'))}
+              />
+            </>
           )}
+        </AnimatePresence>
+
+        {/* The Breathing Orb */}
+        <motion.div
+          animate={{
+            scale: currentConfig.scale,
+            backgroundColor: isPlaying ? undefined : "rgba(122, 154, 126, 0.1)",
+          }}
+          transition={{ duration: currentConfig.duration, ease: "easeInOut" }}
+          className={cn(
+            "w-48 h-48 md:w-64 md:h-64 rounded-full flex flex-col items-center justify-center relative z-10 transition-all duration-1000 shadow-2xl",
+            currentConfig.color,
+            currentConfig.glow
+          )}
+        >
+          <div className="text-white text-center">
+             <motion.div 
+               key={currentPhase}
+               initial={{ opacity: 0, y: 5 }}
+               animate={{ opacity: 1, y: 0 }}
+               className="text-4xl md:text-6xl font-black mb-1"
+             >
+               {timeLeft}
+             </motion.div>
+             <div className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] opacity-80">detik</div>
+          </div>
+        </motion.div>
+
+        {/* Outer Ring / Progress */}
+        <svg className="absolute inset-0 w-full h-full -rotate-90">
+          <circle
+            cx="50%"
+            cy="50%"
+            r="48%"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-muted/10"
+          />
+          <motion.circle
+            cx="50%"
+            cy="50%"
+            r="48%"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeDasharray="100 100"
+            animate={{ strokeDashoffset: isPlaying ? [100, 0] : 100 }}
+            transition={{ duration: currentConfig.duration, ease: "linear" }}
+            className={cn("text-primary transition-colors duration-1000", currentConfig.color.replace('bg-', 'text-'))}
+          />
+        </svg>
+      </div>
+
+      {/* Instruction Overlay */}
+      <div className="text-center space-y-3 mb-12 relative z-10">
+        <motion.h3 
+          key={currentConfig.text}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-3xl md:text-4xl font-black text-foreground tracking-tight"
+        >
+          {currentConfig.text}
+        </motion.h3>
+        <p className="text-muted-foreground font-medium italic">
+          {currentConfig.instruction}
+        </p>
+      </div>
+
+      {/* Stats Bar */}
+      <div className="w-full max-w-lg grid grid-cols-3 gap-4 mb-12">
+         {[
+           { label: "Siklus", value: cycleCount, icon: Wind },
+           { label: "Durasi", value: `${Math.floor(totalTime / 60)}:${(totalTime % 60).toString().padStart(2, '0')}`, icon: Waves },
+           { label: "Level", value: technique.difficulty, icon: Sparkles }
+         ].map((item, i) => (
+           <div key={i} className="glass-card p-4 rounded-3xl text-center border-none shadow-xl shadow-primary/5">
+              <item.icon className="w-4 h-4 text-primary mx-auto mb-2 opacity-40" />
+              <div className="text-lg font-bold text-foreground capitalize">{item.value}</div>
+              <div className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">{item.label}</div>
+           </div>
+         ))}
+      </div>
+
+      {/* Control Bar - Floating */}
+      <div className="flex items-center gap-4 bg-card/50 backdrop-blur-xl p-3 rounded-[2.5rem] shadow-2xl shadow-primary/10 border border-border/40">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+          className="w-14 h-14 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+        >
+          {isSoundEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
         </Button>
 
         {!isPlaying ? (
           <Button
             onClick={startTimer}
-            className="bg-green-600 hover:bg-green-700"
+            className="w-20 h-20 rounded-full bg-primary text-white shadow-xl shadow-primary/30 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
           >
-            <Play className="w-4 h-4 mr-2" />
-            Mulai
+            <PlayCircle className="w-10 h-10 fill-white/20" />
           </Button>
         ) : (
-          <Button onClick={pauseTimer} variant="outline">
-            <Pause className="w-4 h-4 mr-2" />
-            Jeda
+          <Button 
+            onClick={pauseTimer} 
+            className="w-20 h-20 rounded-full bg-card border-4 border-primary text-primary shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
+          >
+            <PauseCircle className="w-10 h-10 fill-primary/10" />
           </Button>
         )}
 
-        <Button onClick={resetTimer} variant="outline">
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Ulang
+        <Button 
+          variant="ghost"
+          size="icon"
+          onClick={resetTimer} 
+          className="w-14 h-14 rounded-full hover:bg-primary/10 text-muted-foreground"
+        >
+          <RotateCcw className="w-6 h-6" />
         </Button>
 
-        <Button onClick={handleCompleteClick} variant="outline">
+        <div className="h-8 w-px bg-border/50 mx-2" />
+
+        <Button onClick={() => setShowRating(true)} variant="ghost" className="px-6 h-14 rounded-2xl font-bold text-xs uppercase tracking-widest text-primary hover:bg-primary/10">
           Selesai
         </Button>
-
-        <Button onClick={onBack} variant="ghost">
-          Kembali
-        </Button>
       </div>
 
-      {/* Pattern Guide */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-900 mb-3">Pola Pernapasan</h4>
-        <div className="grid grid-cols-4 gap-4 text-center">
-          {Object.entries(phaseConfig).map(([phase, config]) => (
-            <div
-              key={phase}
-              className={`p-3 rounded-lg transition-colors ${
-                currentPhase === phase ? "bg-white shadow-sm border" : ""
-              }`}
-            >
-              <div
-                className={`text-lg font-semibold ${config.color.replace(
-                  "bg-",
-                  "text-"
-                )}`}
-              >
-                {config.duration}s
-              </div>
-              <div className="text-sm text-gray-600 capitalize">
-                {config.text}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Debug Info - Hapus di production */}
-      <div className="text-xs text-gray-400 text-center">
-        Debug: Fase: {currentPhase}, Sisa Waktu: {timeLeft}s, Siklus:{" "}
-        {cycleCount}
-      </div>
+      <button
+        onClick={onBack}
+        className="mt-8 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        Kembali ke Teknik
+      </button>
     </div>
   );
 }
