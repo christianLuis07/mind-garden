@@ -3,20 +3,20 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Search, Filter, Calendar } from "lucide-react";
+import { Search, Filter, Calendar, CloudRain, Cloud, Wind, Sun, Sparkles, Moon, Users, Briefcase, Dumbbell, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { moodAPI } from "@/lib/mood-api";
 import { MoodEntry } from "@/types/mood";
+import { motion, AnimatePresence } from "framer-motion";
 
-const moodEmojis = ["😢", "😞", "😐", "😊", "😄"];
-const moodColors = [
-  "bg-red-100 text-red-800",
-  "bg-orange-100 text-orange-800",
-  "bg-yellow-100 text-yellow-800",
-  "bg-green-100 text-green-800",
-  "bg-emerald-100 text-emerald-800",
+const moodIcons = [
+  { icon: CloudRain, label: "Sangat Sedih", color: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: Cloud, label: "Sedih", color: "text-slate-500", bg: "bg-slate-500/10" },
+  { icon: Wind, label: "Netral", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: Sun, label: "Bahagia", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: Sparkles, label: "Sangat Bahagia", color: "text-primary", bg: "bg-primary/10" },
 ];
 
 interface MoodHistoryProps {
@@ -26,19 +26,17 @@ interface MoodHistoryProps {
 export function MoodHistory({ refreshTrigger }: MoodHistoryProps) {
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(" ");
+  const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState<"all" | "week" | "month">("all");
 
   useEffect(() => {
     loadMoodEntries();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, dateFilter]);
 
   const loadMoodEntries = async () => {
     try {
       setIsLoading(true);
-
       const params: any = { limit: 50 };
-
       if (dateFilter === "week") {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -48,172 +46,140 @@ export function MoodHistory({ refreshTrigger }: MoodHistoryProps) {
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
         params.startDate = oneMonthAgo.toISOString().split("T")[0];
       }
-
       const response = await moodAPI.getMoodEntries(params);
-
       if (response.data.success) {
         setEntries(response.data.data.entries);
       }
     } catch (error: any) {
-      console.error("Gagal untuk mengambil mood entries yang tersimpan");
+      console.error("Gagal mengambil riwayat mood");
     } finally {
       setIsLoading(false);
     }
   };
 
   const filteredEntries = entries.filter((entry) =>
-    entry.notes?.toLocaleLowerCase().includes(searchTerm.toLowerCase())
+    entry.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getMoodDisplay = (mood: number) => {
-    return {
-      emoji: moodEmojis[mood - 1],
-      color: moodColors[mood - 1],
-      label: ["Sangat Sedih", "Sedih", "Netral", "Bahagia", "Sangat Bahagia"][
-        mood - 1
-      ],
-    };
-  };
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-center h-32">
-          <Spinner />
-        </div>
+      <div className="glass-card rounded-[2.5rem] p-12 flex items-center justify-center border-none">
+        <Spinner className="w-8 h-8 text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-900">Riwayat Mood</h2>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Mencari catatan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full sm:w-48"
-            />
-          </div>
-          {/* Date Filter */}
-          <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-            <Button
-              variant={dateFilter === "all" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setDateFilter("all")}
-              className="rounded-none border-0"
+    <div className="space-y-6">
+      {/* Search & Filter - Elegant Bar */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 group-focus-within:text-primary transition-colors" />
+          <Input
+            placeholder="Cari dalam ingatan..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-12 h-14 bg-card/50 border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+        </div>
+        <div className="flex bg-card/50 p-1 rounded-2xl shadow-sm">
+          {["all", "week", "month"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setDateFilter(f as any)}
+              className={`px-6 h-12 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                dateFilter === f ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-primary"
+              }`}
             >
-              Semua
-            </Button>
-            <Button
-              variant={dateFilter === "week" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setDateFilter("week")}
-              className="rounded-none border-0"
-            >
-              Pekan
-            </Button>
-            <Button
-              variant={dateFilter === "month" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setDateFilter("month")}
-              className="rounded-none border-0"
-            >
-              Bulan
-            </Button>
-          </div>
+              {f === "all" ? "Semua" : f === "week" ? "Pekan" : "Bulan"}
+            </button>
+          ))}
         </div>
       </div>
 
       {filteredEntries.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-8 h-8 text-gray-400" />
+        <div className="glass-card rounded-[2.5rem] p-20 text-center border-none shadow-xl shadow-primary/5">
+          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+            <Calendar className="w-10 h-10 text-muted-foreground/40" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            tidak ada entri mood
-          </h3>
-          <p className="text-gray-500 max-w-sm mx-auto">
-            {searchTerm || dateFilter !== "all"
-              ? "Tidak ada data yang sesuai dengan filtermu. Coba ubah pencarian atau filternya."
-              : "Mulai catat moodmu untuk melihat riwayat di sini"}
+          <h3 className="text-xl font-bold text-foreground mb-2">Halaman Kosong</h3>
+          <p className="text-muted-foreground max-w-xs mx-auto font-medium italic">
+            Belum ada catatan perasaan yang mekar di periode ini.
           </p>
         </div>
       ) : (
-        <div className="space-y-4 max-h-96 overflow-y-auto">
-          {filteredEntries.map((entry) => {
-            const moodDisplay = getMoodDisplay(entry.mood);
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <AnimatePresence mode="popLayout">
+            {filteredEntries.map((entry, index) => {
+              const moodInfo = moodIcons[entry.mood - 1];
+              const Icon = moodInfo.icon;
 
-            return (
-              <div
-                key={entry.id}
-                className="flex items-center space-x-4 p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors"
-              >
-                {/* Mood Indicator */}
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${moodDisplay.color}`}
+              return (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="glass-card rounded-[2.5rem] p-6 border-none shadow-xl shadow-primary/5 hover:shadow-primary/10 transition-all duration-500 group"
                 >
-                  {moodDisplay.emoji}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${moodDisplay.color}`}
-                      >
-                        {moodDisplay.label}
-                      </span>
-                      {entry.factors?.exercise && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                          🏃 Berolahraga
-                        </span>
-                      )}
+                  <div className="flex items-start gap-5">
+                    {/* Mood Icon Orb */}
+                    <div className={`w-16 h-16 shrink-0 rounded-3xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 ${moodInfo.bg}`}>
+                      <Icon className={`w-8 h-8 ${moodInfo.color}`} />
                     </div>
-                    <span className="text-sm text-gray-500 whitespace-nowrap">
-                      {format(
-                        new Date(entry.createdAt),
-                        "MMM d, yyyy • HH:mm",
-                        { locale: id }
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${moodInfo.bg} ${moodInfo.color}`}>
+                          {moodInfo.label}
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {format(new Date(entry.createdAt), "d MMM yyyy", { locale: id })}
+                        </span>
+                      </div>
+
+                      {entry.notes ? (
+                        <p className="text-foreground font-medium leading-relaxed mb-4 line-clamp-3 italic">
+                          &quot;{entry.notes}&quot;
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground/60 text-sm italic mb-4">Tanpa catatan tambahan.</p>
                       )}
-                    </span>
+
+                      {/* Factors - Minimalist Chips */}
+                      <div className="flex flex-wrap gap-2">
+                        {entry.factors?.sleep && (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/40 rounded-xl text-[10px] font-bold text-muted-foreground">
+                            <Moon className="w-3 h-3" />
+                            <span>Tidur: {entry.factors.sleep}</span>
+                          </div>
+                        )}
+                        {entry.factors?.social && (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/40 rounded-xl text-[10px] font-bold text-muted-foreground">
+                            <Users className="w-3 h-3" />
+                            <span>Sosial: {entry.factors.social}</span>
+                          </div>
+                        )}
+                        {entry.factors?.work && (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/40 rounded-xl text-[10px] font-bold text-muted-foreground">
+                            <Briefcase className="w-3 h-3" />
+                            <span>Kerja: {entry.factors.work}</span>
+                          </div>
+                        )}
+                        {entry.factors?.exercise && (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-xl text-[10px] font-bold text-primary">
+                            <Dumbbell className="w-3 h-3" />
+                            <span>Olahraga</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {entry.notes && (
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {entry.notes}
-                    </p>
-                  )}
-
-                  {/* Factors */}
-                  {entry.factors && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {entry.factors.sleep && (
-                        <span className="inline-flex items-center text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                          😴 Tidur: {entry.factors.sleep}/10
-                        </span>
-                      )}
-                      {entry.factors.social && (
-                        <span className="inline-flex items-center text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                          👥 Sosial: {entry.factors.social}/10
-                        </span>
-                      )}
-                      {entry.factors.work && (
-                        <span className="inline-flex items-center text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                          💼 Kerja: {entry.factors.work}/10
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       )}
     </div>

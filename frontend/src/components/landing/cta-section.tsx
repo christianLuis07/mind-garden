@@ -1,80 +1,40 @@
-import Link from "next/link";
+"use client";
+
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { SectionWrapper } from "@/components/ui/section-wrapper";
-import { Leaf, Lock, Users, Zap } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export function CTASection() {
   return (
-    <SectionWrapper className="bg-linear-to-br from-green-500 to-blue-500 text-white">
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Main CTA */}
-        <h2 className="text-3xl lg:text-5xl font-bold mb-6">
-          Siap Menumbuhkan Taman Kesehatan Mentalmu?
-        </h2>
+    <section className="py-24 bg-background relative overflow-hidden">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-primary rounded-[3rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-2xl shadow-primary/30"
+        >
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/20 rounded-full -ml-32 -mb-32 blur-3xl" />
 
-        <p className="text-xl lg:text-2xl mb-8 opacity-90 leading-relaxed">
-          Bergabunglah dengan ribuan orang yang telah mengubah perjalanan
-          kesehatan mental mereka. Mulai menumbuhkan hari ini gratis, pribadi,
-          dan dibuat untuk kehidupan nyata.
-        </p>
-
-        {/* Benefits Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          <div className="text-center">
-            <div className="text-2xl mb-2 flex justify-center">
-              <Leaf />
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <Sparkles className="w-12 h-12 mx-auto mb-8 animate-bounce" />
+            <h2 className="text-4xl md:text-6xl font-bold mb-8 leading-tight">
+              Siap untuk Menanam Benih <span className="italic">Kebahagiaan?</span>
+            </h2>
+            <p className="text-xl md:text-2xl mb-12 text-white/80 leading-relaxed">
+              Bergabunglah dengan ribuan pengguna lainnya yang telah memulai perjalanan kesehatan mental mereka bersama MindGarden.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-10 py-8 text-xl font-bold shadow-xl">
+                Mulai Gratis <ArrowRight className="ml-2 w-6 h-6" />
+              </Button>
             </div>
-            <div className="font-semibold">Selamanya Gratis</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl mb-2 flex justify-center">
-              <Lock />
-            </div>
-            <div className="font-semibold">100% Pribadi</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-2 flex justify-center">
-              <Zap />
-            </div>
-            <div className="font-semibold">Setup 2 Menit</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-2 flex justify-center">
-              <Users />
-            </div>
-            <div className="font-semibold">Komunitas Dukungan</div>
-          </div>
-        </div>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link href="/register">
-            <Button
-              size="lg"
-              className="bg-white text-green-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
-            >
-              Mulai Perjalanan Gratismu
-            </Button>
-          </Link>
-          <Link href="#features">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-green-600 hover:bg-white hover:text-green-600 px-8 py-4 text-lg font-semibold"
-            >
-              Lihat Fitur
-            </Button>
-          </Link>
-        </div>
-
-        {/* Trust Note */}
-        <div className="mt-8 text-sm opacity-80">
-          <p>
-            Tidak perlu kartu kredit • Pendaftaran 30 detik • Bisa dibatalkan
-            kapan saja
-          </p>
-        </div>
+        </motion.div>
       </div>
-    </SectionWrapper>
+    </section>
   );
 }

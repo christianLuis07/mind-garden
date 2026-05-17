@@ -1,140 +1,99 @@
-import { FeatureCard } from "@/components/ui/feature-card";
-import { SectionWrapper } from "@/components/ui/section-wrapper";
-import {
-  BarChart,
-  FileText,
-  Wind,
-  Users,
-  TrendingUp,
-  Lock,
-} from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
+import { BookOpen, Smile, Wind, Users, BarChart3, ShieldCheck } from "lucide-react";
 
 const features = [
   {
-    icon: BarChart,
-    title: "Pelacakan Mood Pintar",
-    description:
-      "Catat mood harian Anda dengan analitik cerdas yang membantu memahami pola dan pemicu.",
-    features: [
-      "Grafik dan tren mood visual",
-      "Pengenalan pola",
-      "Faktor mood kustom",
-      "Insight mingguan",
-    ],
-    color: "green" as const,
+    title: "Jurnal Pintar",
+    description: "Tuliskan apa saja yang ada di pikiranmu. Analisis kami membantu kamu mengenali pola emosi dari setiap tulisan.",
+    icon: BookOpen,
+    color: "bg-blue-500/10 text-blue-600",
   },
   {
-    icon: FileText,
-    title: "Jurnal Reflektif",
-    description:
-      "Ungkapkan pikiran Anda di ruang aman dengan analisis sentimen dan kontrol privasi bawaan.",
-    features: [
-      "Editor teks kaya fitur",
-      "Analisis sentimen",
-      "Lampiran gambar",
-      "Entri publik/pribadi",
-    ],
-    color: "blue" as const,
+    title: "Pantau Mood",
+    description: "Catat bagaimana perasaanmu setiap hari. Lihat perkembangan emosimu melalui grafik yang cantik dan mudah dipahami.",
+    icon: Smile,
+    color: "bg-orange-500/10 text-orange-600",
   },
   {
+    title: "Ruang Napas",
+    description: "Tenangkan pikiran yang bising dengan teknik pernapasan terpandu yang dirancang untuk meredakan stres instan.",
     icon: Wind,
-    title: "Latihan Pernapasan Terpandu",
-    description:
-      "Tenangkan pikiran dengan latihan pernapasan berbasis sains dan teknik meditasi.",
-    features: [
-      "Beragam teknik",
-      "Panduan visual",
-      "Pelacakan progres",
-      "Monitoring tingkat ketenangan",
-    ],
-    color: "purple" as const,
+    color: "bg-teal-500/10 text-teal-600",
   },
   {
+    title: "Komunitas Hangat",
+    description: "Kamu tidak sendirian. Temukan teman cerita di grup dukungan yang aman, anonim, dan penuh empati.",
     icon: Users,
-    title: "Komunitas Pendukung",
-    description:
-      "Terhubung dengan orang lain di ruang aman dan termoderasi untuk berbagi pengalaman dan dukungan.",
-    features: [
-      "Grup berdasarkan topik",
-      "Berbagi anonim",
-      "Chat real-time",
-      "Moderasi ahli",
-    ],
-    color: "green" as const,
+    color: "bg-purple-500/10 text-purple-600",
   },
   {
-    icon: TrendingUp,
-    title: "Analitik Perkembangan",
-    description:
-      "Dapatkan insight mendalam tentang perjalanan kesejahteraan mental Anda dengan analitik komprehensif.",
-    features: [
-      "Skor kesejahteraan",
-      "Pelacakan pembentukan kebiasaan",
-      "Lencana pencapaian",
-      "Laporan progres",
-    ],
-    color: "blue" as const,
+    title: "Wawasan Diri",
+    description: "Dapatkan laporan mingguan tentang kesehatan mentalmu. Pahami apa yang membuatmu bahagia atau cemas.",
+    icon: BarChart3,
+    color: "bg-green-500/10 text-green-600",
   },
   {
-    icon: Lock,
-    title: "Privasi Lengkap",
-    description:
-      "Data Anda terenkripsi dan aman. Anda mengontrol apa yang dibagikan dan dengan siapa.",
-    features: [
-      "Enkripsi end-to-end",
-      "Alat ekspor data",
-      "Kontrol privasi",
-      "Mode anonim",
-    ],
-    color: "purple" as const,
+    title: "Privasi Total",
+    description: "Keamananmu adalah prioritas kami. Semua data dienkripsi sehingga hanya kamu yang bisa membacanya.",
+    icon: ShieldCheck,
+    color: "bg-red-500/10 text-red-600",
   },
 ];
 
 export function FeaturesSection() {
   return (
-    <SectionWrapper id="features" className="bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Semua yang Anda Butuhkan untuk Kesejahteraan Mental
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            MindGarden menggabungkan alat yang kuat dengan antarmuka yang indah
-            dan intuitif untuk mendukung perjalanan kesehatan mental Anda.
-          </p>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <FeatureCard
-                key={index}
-                icon={<Icon />}
-                title={feature.title}
-                description={feature.description}
-                features={feature.features}
-                color={feature.color}
-              />
-            );
-          })}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="text-center mt-12">
-          <p className="text-gray-600 mb-6">
-            Siap memulai perjalanan kesejahteraan mental Anda?
-          </p>
-          <a
-            href="/register"
-            className="inline-flex items-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"
+    <section id="features" className="py-24 bg-background relative overflow-hidden">
+      <div className="container mx-auto px-4">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-primary font-bold text-sm tracking-widest uppercase mb-4"
           >
-            Bergabung dengan MindGarden Sekarang
-          </a>
+            Layanan Kami
+          </motion.h2>
+          <motion.h3
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-black mb-6 tracking-tight"
+          >
+            Segala hal untuk menjaga <span className="text-primary italic font-serif">kesehatan mentalmu</span>
+          </motion.h3>
+          <motion.p
+             initial={{ opacity: 0, y: 20 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             transition={{ delay: 0.2 }}
+             className="text-lg md:text-xl text-muted-foreground font-medium"
+          >
+            MindGarden menyediakan berbagai alat yang dirancang untuk membantumu mengelola stres dan membangun ketahanan emosional yang lebih baik.
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="glass-card p-10 rounded-[2.5rem] hover:shadow-2xl transition-all duration-500 group border-white/40 dark:border-white/5"
+            >
+              <div className={`w-16 h-16 rounded-2xl ${feature.color} flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
+                <feature.icon className="w-8 h-8" />
+              </div>
+              <h4 className="text-2xl font-bold mb-4 tracking-tight">{feature.title}</h4>
+              <p className="text-muted-foreground leading-relaxed font-medium">{feature.description}</p>
+            </motion.div>
+          ))}
         </div>
       </div>
-    </SectionWrapper>
+    </section>
   );
 }

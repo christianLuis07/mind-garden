@@ -32,8 +32,17 @@ const validateRegister = [
       }
     }),
   body("password")
-    .isLength({ min: 8 })
-    .withMessage("Password setidaknya terdiri dari 8 karakter"),
+    .isStrongPassword({
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    })
+    .withMessage(
+      "Password harus minimal 8 karakter dan mengandung huruf besar, huruf kecil, angka, dan simbol"
+    ),
+
   body("name")
     .optional()
     .trim()

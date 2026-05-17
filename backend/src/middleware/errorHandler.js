@@ -40,7 +40,6 @@ const errorHandler = (err, req, res, next) => {
   res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || "Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };
 

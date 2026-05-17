@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Smile, BookOpen, Wind, TrendingUp } from "lucide-react";
+import { Smile, BookOpen, Wind, TrendingUp, Sparkles, Coffee } from "lucide-react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
@@ -10,12 +10,13 @@ import {
   Activity,
 } from "@/components/dashboard/recent-activity";
 import { MoodAnalytics } from "@/components/mood/mood-analytics";
-import { Spinner } from "@/components/ui/spinner";
 import { moodAPI } from "@/lib/mood-api";
 import { journalAPI } from "@/lib/journal-api";
 import { breathingAPI } from "@/lib/breathing-api";
 import { useAuthStore } from "@/store/auth-store";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO, format } from "date-fns";
+import { id } from "date-fns/locale";
+import { motion } from "framer-motion";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -66,14 +67,12 @@ export default function DashboardPage() {
         ) {
           const entries = moodEntriesRes.data.data.entries;
           const today = new Date();
-          let currentDateCheck = today;
-
           const lastEntryDate = parseISO(entries[0].createdAt);
           const diff = differenceInDays(today, lastEntryDate);
 
           if (diff <= 1) {
             streak = 1;
-            streak = entries.length > 1 ? Math.min(entries.length, 5) : 1;
+            streak = Math.min(entries.length, 7); 
           }
         }
 
@@ -86,21 +85,19 @@ export default function DashboardPage() {
 
         const activities: Activity[] = [];
 
-        // Map Mood Entries
         if (moodEntriesRes.data?.success) {
           moodEntriesRes.data.data.entries.forEach((entry) => {
             activities.push({
               id: `mood-${entry.id}`,
               type: "mood",
-              title: "Mood Dicatat",
-              description: entry.notes || `Merasa ${getMoodLabel(entry.mood)}`,
+              title: "Catatan Mood",
+              description: entry.notes || `Kamu merasa ${getMoodLabel(entry.mood)}`,
               timestamp: entry.createdAt,
               value: entry.mood,
             });
           });
         }
 
-        // Map Journal Entries
         if (journalEntriesRes.data?.success) {
           journalEntriesRes.data.data.entries.forEach((entry) => {
             const cleanContent =
@@ -108,23 +105,20 @@ export default function DashboardPage() {
             activities.push({
               id: `journal-${entry.id}`,
               type: "journal",
-              title: entry.title || "Entri Jurnal",
+              title: entry.title || "Tulisan Baru",
               description: cleanContent,
               timestamp: entry.createdAt,
             });
           });
         }
 
-        // Map Breathing Sessions
         if (breathingSessionRes.data?.success) {
           breathingSessionRes.data.data.sessions.forEach((session) => {
             activities.push({
               id: `breath-${session.id}`,
               type: "breathing",
-              title: "Latihan Pernapasan",
-              description: `Menyelesaikan teknik ${
-                session.technique
-              } (${Math.round(session.duration / 60)} menit)`,
+              title: "Latihan Napas",
+              description: `Sesi ${session.technique} selama ${Math.round(session.duration / 60)} menit`,
               timestamp: session.createdAt,
               value: session.calmLevel,
             });
@@ -152,23 +146,20 @@ export default function DashboardPage() {
   }, [user]);
 
   const getMoodLabel = (mood: number) => {
-    const labels = [
-      "Sangat Sedih",
-      "Sedih",
-      "Netral",
-      "Bahagia",
-      "Sangat Bahagia",
-    ];
-    return labels[mood - 1] || "Netral";
+    const labels = ["sedang kurang baik", "agak sedih", "biasa saja", "cukup senang", "sangat bahagia"];
+    return labels[mood - 1] || "netral";
   };
 
   if (isLoading) {
     return (
       <ProtectedRoute>
-        <div className="flex items-center justify-center min-h-96">
-          <div className="text-center">
-            <Spinner className="mx-auto mb-4 w-8 h-8 text-green-600" />
-            <p className="text-gray-600">Menyiapkan taman mentalmu...</p>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="relative">
+               <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+               <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary w-6 h-6 animate-pulse" />
+            </div>
+            <p className="text-muted-foreground font-medium animate-pulse italic">Menyiapkan ruang tenangmu...</p>
           </div>
         </div>
       </ProtectedRoute>
@@ -177,65 +168,93 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="space-y-8">
+      <div className="space-y-10 pb-12">
         {/* Welcome Section */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Selamat Datang, {user?.name?.split(" ")[0] || "Sahabat"}!
-          </h1>
-          <p className="text-gray-600">
-            Berikut ringkasan kesehatan mentalmu dalam 30 hari terakhir.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+              <Coffee className="w-3 h-3" />
+              <span>Waktunya Rehat Sejenak</span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-foreground tracking-tight">
+              Halo, <span className="text-primary">{user?.name?.split(" ")[0] || "Teman"}</span>.
+            </h1>
+            <p className="text-muted-foreground mt-2 font-medium">
+              Senang bertemu lagi. Mari luangkan waktu sejenak untuk dirimu sendiri hari ini.
+            </p>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-right"
+          >
+             <p className="text-sm font-bold text-foreground uppercase tracking-widest">
+               {format(new Date(), "EEEE, d MMMM", { locale: id })}
+             </p>
+             <p className="text-xs text-muted-foreground font-medium italic">Bagaimana perasaanmu saat ini?</p>
+          </motion.div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
-            title="Entri Mood"
+            title="Mood Tercatat"
             value={stats.moodEntries}
-            description="Bulan Ini"
+            description="Perasaanmu bulan ini"
             icon={<Smile className="w-6 h-6" />}
-            className="border-l-4 border-l-green-500"
           />
           <StatsCard
-            title="Entri Jurnal"
+            title="Jurnal Ditulis"
             value={stats.journalEntries}
-            description="Catatan Refleksi"
+            description="Total ceritamu"
             icon={<BookOpen className="w-6 h-6" />}
-            className="border-l-4 border-l-blue-500"
           />
           <StatsCard
-            title="Sesi Pernapasan"
+            title="Sesi Napas"
             value={stats.breathingSessions}
-            description="Latihan Mindfulness"
+            description="Waktu mindfulness"
             icon={<Wind className="w-6 h-6" />}
-            className="border-l-4 border-l-purple-500"
           />
           <StatsCard
-            title="Aktivitas Beruntun"
+            title="Konsistensi"
             value={`${stats.currentStreak} hari`}
-            description="Pertahankan!"
+            description="Lanjutkan kebiasaan baikmu!"
             icon={<TrendingUp className="w-6 h-6" />}
-            className="border-l-4 border-l-orange-500"
           />
         </div>
 
         {/* Quick Actions */}
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-            Mulai Sesuatu yang Baru
-          </h2>
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-1.5 h-8 bg-primary rounded-full" />
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">
+              Apa yang ingin kamu lakukan?
+            </h2>
+          </div>
           <QuickActions />
         </div>
 
         {/* Recent Activity & Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           <RecentActivity activities={recentActivities} isLoading={isLoading} />
 
           {/* Mood Chart */}
-          <div className="h-full">
-            <MoodAnalytics />
-          </div>
+          <motion.div 
+             initial={{ opacity: 0, scale: 0.98 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="glass-card rounded-[2.5rem] p-8 shadow-xl shadow-primary/5 h-full flex flex-col"
+          >
+             <div className="flex items-center space-x-3 mb-8">
+                <div className="w-1.5 h-8 bg-primary rounded-full" />
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">Grafik Perasaan</h2>
+             </div>
+             <div className="flex-1 min-h-[300px]">
+                <MoodAnalytics />
+             </div>
+          </motion.div>
         </div>
       </div>
     </ProtectedRoute>

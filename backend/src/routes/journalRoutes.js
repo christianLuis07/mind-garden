@@ -1,5 +1,4 @@
 const express = require("express");
-const multer = require("multer");
 const {
   createJournalEntry,
   getJournalEntry,
@@ -7,16 +6,18 @@ const {
   getPublicJournalEntries,
   updateJournalEntry,
   deleteJournalEntry,
-  deleteJournalImage, // Import controller baru
+  deleteJournalImage,
   getJournalAnalytics,
 } = require("../controllers/journalController");
 const { auth, optionalAuth } = require("../middleware/auth");
 const { validateJournalEntry } = require("../middleware/validation");
+const {
+  uploadJournalImage,
+  handleUploadError,
+} = require("../middleware/upload");
 
 const router = express.Router();
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
 
 const parseJournalFormData = (req, res, next) => {
   if (req.body && req.body.data) {
@@ -39,7 +40,8 @@ router.use(auth);
 
 router.post(
   "/",
-  upload.array("images", 5),
+  uploadJournalImage.array("images", 5),
+  handleUploadError,
   parseJournalFormData,
   validateJournalEntry,
   createJournalEntry
@@ -49,11 +51,13 @@ router.get("/analytics", getJournalAnalytics);
 router.get("/:id", getJournalEntry);
 router.put(
   "/:id",
-  upload.array("images", 5),
+  uploadJournalImage.array("images", 5),
+  handleUploadError,
   parseJournalFormData,
   validateJournalEntry,
   updateJournalEntry
 );
+
 router.delete("/:id", deleteJournalEntry);
 
 router.delete("/:id/images/:index", deleteJournalImage);

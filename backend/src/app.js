@@ -26,7 +26,24 @@ const limiter = rateLimit({
     message: "Terlalu banyak permintaan, coba lagi nanti",
   },
 });
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 100, // Maksimal 10 percobaan dalam 15 menit
+  message: {
+    success: false,
+    message: "Terlalu banyak percobaan login/registrasi. Silakan tunggu 15 menit lagi.",
+  },
+});
+
 app.use("/api", limiter);
+app.use("/api/v1/auth/login", authLimiter);
+app.use("/api/v1/auth/register", authLimiter);
+app.use("/api/v1/auth/totp/validate", authLimiter);
+app.use("/api/v1/email/forgot-password", authLimiter);
+app.use("/api/v1/email/reset-password", authLimiter);
+
+
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));

@@ -1,13 +1,16 @@
 const { prisma } = require("../config/database");
+const { sanitizeContent } = require("../utils/sanitizer");
 
 class SupportService {
+
   async createSupportGroup(groupData, creatorId) {
+
     const { name, description, isPublic, maxMembers } = groupData;
 
     const supportGroup = await prisma.supportGroup.create({
       data: {
-        name,
-        description,
+        name: sanitizeContent(name),
+        description: sanitizeContent(description),
         isPublic: isPublic !== undefined ? isPublic : true,
         maxMembers: maxMembers || 50,
       },
@@ -345,12 +348,13 @@ class SupportService {
 
     const message = await prisma.supportGroupMessage.create({
       data: {
-        content,
+        content: sanitizeContent(content),
         messageType,
         imageUrl,
         userId,
         supportGroupId: groupId,
       },
+
       include: {
         user: {
           select: {

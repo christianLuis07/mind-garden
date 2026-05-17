@@ -21,11 +21,15 @@ const auth = async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, name: true, avatar: true, role: true },
+      select: { id: true, email: true, name: true, avatar: true, role: true, isActive: true },
     });
 
     if (!user) {
       return errorResponse(res, "Unauthorized", 401);
+    }
+
+    if (user.isActive === false) {
+      return errorResponse(res, "Akun Anda telah dinonaktifkan. Silakan hubungi admin.", 403);
     }
 
     req.user = user;
