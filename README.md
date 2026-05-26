@@ -1,4 +1,4 @@
-# 🌱 MindGarden
+#  MindGarden
 
 **Platform digital terpadu untuk kesehatan mental dan kesejahteraan emosional.**
 
