@@ -39,7 +39,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export default function SettingsPage() {
-  const { user, setAuth, clearAuth } = useAuthStore();
+  const { user, setAuth, setUser, clearAuth } = useAuthStore();
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "account">("profile");
   const [isLoading, setIsLoading] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -88,7 +88,7 @@ export default function SettingsPage() {
 
       const response = await authAPI.updateProfile(formData);
       if (response.data.success) {
-        setAuth(response.data.data.user);
+        setUser(response.data.data.user);
         toast.success("Profil Diperbarui", {
           description: "Perubahan profilmu telah berhasil disimpan.",
         });

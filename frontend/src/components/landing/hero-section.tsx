@@ -24,7 +24,9 @@ export function HeroSection() {
             className="inline-flex items-center space-x-2 bg-white/40 dark:bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 mb-8"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold tracking-wide">Ruang aman untuk kesehatan mentalmu</span>
+            <span className="text-sm font-semibold tracking-wide">
+              Ruang Aman Kesehatan Mental • Dibuat oleh Christian Luis Paskalis Ginting
+            </span>
           </motion.div>
 
           <motion.h1

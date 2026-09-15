@@ -54,8 +54,10 @@ export default function LoginPage() {
           return;
         }
 
-        setAuth(response.data.data?.user, response?.data?.data?.token);
-        router.push("/dashboard");
+        if (response.data.data?.user && response.data.data?.token) {
+          setAuth(response.data.data.user, response.data.data.token);
+          router.push("/dashboard");
+        }
       }
     } catch (error: any) {
       setError(getErrorMessage(error));
@@ -131,7 +133,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <Link href="/forgot-password" size="sm" className="text-xs text-primary hover:underline font-medium">
+                    <Link href="/forgot-password" className="text-xs text-primary hover:underline font-medium">
                       Lupa Password?
                     </Link>
                   </div>
