@@ -51,22 +51,23 @@ export default function AdminLoginPage() {
       const response = await authAPI.login(data);
 
       if (response.data.data?.requireTotp) {
-        setTempToken(response.data.data.tempToken);
+        const token = response.data.data.tempToken || "";
+        setTempToken(token);
         
         if (response.data.data.isTotpEnabled) {
           setStep("totp");
         } else {
           // Trigger setup
-          const setupRes = await adminAPI.setupTotp(response.data.data.tempToken);
+          const setupRes = await adminAPI.setupTotp(token);
           if (setupRes.data.success) {
             setQrCode(setupRes.data.data.qrCodeUrl);
             setTotpSecret(setupRes.data.data.secret);
             setStep("setup");
           }
         }
-      } else if (response.data.data?.user?.role === "admin") {
+      } else if (response.data.data?.user?.role === "admin" && response.data.data?.token) {
          // Should not happen if backend enforces requireTotp for admin
-         setAuth(response.data.data?.user, response.data.data?.token);
+         setAuth(response.data.data.user, response.data.data.token);
          router.push("/admin/dashboard");
       } else {
          setError("Akun ini bukan administrator.");

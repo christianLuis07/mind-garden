@@ -45,7 +45,15 @@ api.interceptors.response.use(
 export const authAPI = {
   // loginUser api
   login: (data: { email: string; password: string }) =>
-    api.post<ApiResponse<{ user: any; token: string }>>("/auth/login", data),
+    api.post<
+      ApiResponse<{
+        user?: any;
+        token?: string;
+        requireTotp?: boolean;
+        isTotpEnabled?: boolean;
+        tempToken?: string;
+      }>
+    >("/auth/login", data),
 
   // registerUser api
   register: (data: { email: string; password: string; name: string }) =>

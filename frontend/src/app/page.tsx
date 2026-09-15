@@ -119,30 +119,25 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Bottom */}
-          <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="text-gray-400 text-sm">
-              © 2024 MindGarden. All rights reserved.
+          {/* Developer Attribution & Bottom */}
+          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 text-center md:text-left">
+              <span>Dikonsep & Dikembangkan oleh</span>
+              <a
+                href="https://github.com/christianLuis07"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white font-semibold hover:text-green-400 transition-colors underline decoration-dotted underline-offset-4"
+              >
+                Christian Luis Paskalis Ginting
+              </a>
+              <span className="text-gray-600 hidden sm:inline">•</span>
+              <span className="text-xs text-gray-500 hidden sm:inline">
+                Full-Stack Software Engineer
+              </span>
             </div>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a
-                href="/privacy"
-                className="text-gray-400 hover:text-white text-sm transition-colors"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="/terms"
-                className="text-gray-400 hover:text-white text-sm transition-colors"
-              >
-                Terms of Service
-              </a>
-              <a
-                href="/cookies"
-                className="text-gray-400 hover:text-white text-sm transition-colors"
-              >
-                Cookie Policy
-              </a>
+            <div className="text-gray-400 text-xs">
+              © 2026 MindGarden. All rights reserved.
             </div>
           </div>
         </div>
