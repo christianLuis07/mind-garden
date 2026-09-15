@@ -20,7 +20,7 @@ async function main() {
   // Hash password for demo users
   const hashedPassword = await bcrypt.hash("password123", 10);
 
-  // Create Users
+  // Create Demo Users
   const users = await Promise.all([
     prisma.user.create({
       data: {
@@ -29,6 +29,7 @@ async function main() {
         name: "John Doe",
         avatar: "https://i.pravatar.cc/150?img=1",
         role: "user",
+        isEmailVerified: true,
       },
     }),
     prisma.user.create({
@@ -38,15 +39,17 @@ async function main() {
         name: "Jane Smith",
         avatar: "https://i.pravatar.cc/150?img=2",
         role: "user",
+        isEmailVerified: true,
       },
     }),
     prisma.user.create({
       data: {
-        email: "admin@example.com",
+        email: "alex@example.com",
         password: hashedPassword,
-        name: "Admin User",
+        name: "Alex Rivera",
         avatar: "https://i.pravatar.cc/150?img=3",
-        role: "admin",
+        role: "user",
+        isEmailVerified: true,
       },
     }),
   ]);
@@ -99,7 +102,7 @@ async function main() {
         title: "My First Day of Meditation",
         content:
           "Today I tried meditation for the first time. It was challenging to quiet my mind, but I felt more peaceful afterwards. I want to make this a daily habit.",
-        sentiment: 0.7,
+        sentimentScore: 0.7,
         tags: ["meditation", "self-care", "mindfulness"],
         isPublic: true,
       },
@@ -110,7 +113,7 @@ async function main() {
         title: "Dealing with Stress",
         content:
           "Work has been overwhelming lately. I need to find better ways to manage my stress levels. Maybe I should try the breathing exercises more regularly.",
-        sentiment: -0.3,
+        sentimentScore: -0.3,
         tags: ["stress", "work", "anxiety"],
         isPublic: false,
       },
@@ -121,7 +124,7 @@ async function main() {
         title: "Gratitude List",
         content:
           "Today I am grateful for: my supportive family, good health, a stable job, and the beautiful weather. Focusing on gratitude really helps shift my perspective.",
-        sentiment: 0.9,
+        sentimentScore: 0.9,
         tags: ["gratitude", "positivity", "happiness"],
         isPublic: true,
       },
@@ -285,10 +288,10 @@ async function main() {
   console.log(`   - Support Groups: ${supportGroups.length}`);
   console.log(`   - Group Members: ${members.length}`);
   console.log(`   - Group Messages: ${messages.length}`);
-  console.log("\n👤 Demo Users:");
-  console.log("   - john@example.com (password: password123)");
-  console.log("   - jane@example.com (password: password123)");
-  console.log("   - admin@example.com (password: password123)");
+  console.log("\n👤 Demo Community Users:");
+  console.log("   - john@example.com");
+  console.log("   - jane@example.com");
+  console.log("   - alex@example.com");
 }
 
 main()
