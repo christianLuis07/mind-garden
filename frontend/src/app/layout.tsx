@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://mind-garden.vercel.app",
+    url: "https://mindgarden-porting.my.id",
     siteName: "MindGarden by Christian Luis Paskalis Ginting",
     title:
       "MindGarden — Platform Kesehatan Mental karya Christian Luis Paskalis Ginting",
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://mind-garden.vercel.app",
+    canonical: "https://mindgarden-porting.my.id",
   },
 };
 
@@ -91,7 +91,7 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "Person",
-      "@id": "https://mind-garden.vercel.app/#author",
+      "@id": "https://mindgarden-porting.my.id/#author",
       name: "Christian Luis Paskalis Ginting",
       alternateName: [
         "Christian Luis",
@@ -109,7 +109,7 @@ const jsonLd = {
     },
     {
       "@type": "WebApplication",
-      "@id": "https://mind-garden.vercel.app/#webapp",
+      "@id": "https://mindgarden-porting.my.id/#webapp",
       name: "MindGarden",
       alternateName: "MindGarden by Christian Luis Paskalis Ginting",
       applicationCategory: "HealthApplication, LifestyleApplication",
@@ -117,10 +117,10 @@ const jsonLd = {
       description:
         "MindGarden adalah platform kesehatan mental dan pelacak suasana hati (mood tracker) karya Christian Luis Paskalis Ginting. Menyediakan fitur jurnal reflektif, analisis sentimen emosi AI, latihan pernapasan terpandu, dan komunitas dukungan.",
       author: {
-        "@id": "https://mind-garden.vercel.app/#author",
+        "@id": "https://mindgarden-porting.my.id/#author",
       },
       creator: {
-        "@id": "https://mind-garden.vercel.app/#author",
+        "@id": "https://mindgarden-porting.my.id/#author",
       },
       offers: {
         "@type": "Offer",
