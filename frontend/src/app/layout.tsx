@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://mind-garden.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://mindgarden-porting.my.id"
   ),
   title: {
     default:
