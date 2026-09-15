@@ -5,6 +5,8 @@ const app = require("./src/app");
 const { connectDB } = require("./src/config/database");
 const logger = require("./src/utils/logger");
 
+const { isOriginAllowed } = require("./src/config/cors");
+
 const PORT = process.env.PORT || 5000;
 
 // Connect to database
@@ -14,7 +16,13 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },

@@ -7,36 +7,12 @@ const path = require("path");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const routes = require("./routes");
 
+const { corsOptions } = require("./config/cors");
+
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-
-const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:3000",
-  // Accept both www and non-www versions
-  ...(process.env.CLIENT_URL
-    ? [
-        process.env.CLIENT_URL.replace("://www.", "://"),
-        process.env.CLIENT_URL.includes("://www.")
-          ? process.env.CLIENT_URL
-          : process.env.CLIENT_URL.replace("://", "://www."),
-      ]
-    : []),
-].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
