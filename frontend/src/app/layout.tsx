@@ -102,7 +102,7 @@ const jsonLd = {
       jobTitle: "Full-Stack Software Engineer",
       description:
         "Software Engineer dan kreator platform MindGarden — aplikasi terintegrasi untuk kesehatan mental dan kesejahteraan emosional.",
-      url: "https://github.com/christianLuis07",
+      url: "https://mindgarden-porting.my.id",
       sameAs: [
         "https://github.com/christianLuis07",
         "https://www.linkedin.com/in/christian-luis-paskalis-ginting-85abbb2a2/",
