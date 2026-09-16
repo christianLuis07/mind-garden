@@ -105,6 +105,9 @@ const jsonLd = {
       url: "https://github.com/christianLuis07",
       sameAs: [
         "https://github.com/christianLuis07",
+        "https://www.linkedin.com/in/christian-luis-paskalis-ginting-85abbb2a2/",
+        "https://dev.to/christianluis07",
+        "https://christianluispg07.blogspot.com",
       ],
     },
     {
