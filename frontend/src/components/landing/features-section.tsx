@@ -1,44 +1,57 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BookOpen, Smile, Wind, Users, BarChart3, ShieldCheck } from "lucide-react";
+import {
+  NotebookPen,
+  HeartPulse,
+  Wind,
+  HeartHandshake,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
 
 const features = [
   {
     title: "Reflective Journaling",
-    description: "A quiet space to write what is on your mind. Automated sentiment analysis helps you spot subtle emotional shifts over time.",
-    icon: BookOpen,
-    color: "bg-blue-500/10 text-blue-600",
+    description:
+      "A quiet space to write what is on your mind. Automated sentiment analysis helps you spot subtle emotional shifts over time.",
+    icon: NotebookPen,
+    color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20",
   },
   {
     title: "Daily Mood Tracking",
-    description: "Check in with how you feel in seconds. Pair moods with lifestyle factors like sleep and stress to uncover clear patterns.",
-    icon: Smile,
-    color: "bg-orange-500/10 text-orange-600",
+    description:
+      "Check in with how you feel in seconds. Pair moods with lifestyle factors like sleep and stress to uncover clear patterns.",
+    icon: HeartPulse,
+    color: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20",
   },
   {
     title: "Guided Breathwork",
-    description: "Evidence-backed pacing techniques including Box Breathing and 4-7-8 to downshift your nervous system whenever tension strikes.",
+    description:
+      "Evidence-backed pacing techniques including Box Breathing and 4-7-8 to downshift your nervous system whenever tension strikes.",
     icon: Wind,
-    color: "bg-teal-500/10 text-teal-600",
+    color: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20",
   },
   {
     title: "Support Communities",
-    description: "Safe, moderated spaces to connect with peers. Share reflections anonymously or openly with people on similar paths.",
-    icon: Users,
-    color: "bg-purple-500/10 text-purple-600",
+    description:
+      "Safe, moderated spaces to connect with peers. Share reflections anonymously or openly with people on similar paths.",
+    icon: HeartHandshake,
+    color: "bg-primary/15 text-primary dark:text-primary-foreground border border-primary/25",
   },
   {
     title: "Visual Analytics",
-    description: "Clear charts and trend calendars that turn your daily check-ins into actionable awareness of your well-being habits.",
-    icon: BarChart3,
-    color: "bg-green-500/10 text-green-600",
+    description:
+      "Clear charts and trend calendars that turn your daily check-ins into actionable awareness of your well-being habits.",
+    icon: TrendingUp,
+    color: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20",
   },
   {
     title: "Private by Default",
-    description: "Your journals and check-ins belong solely to you. Protected with robust encryption, strict auth, and zero data selling.",
+    description:
+      "Your journals and check-ins belong solely to you. Protected with robust encryption, strict auth, and zero data selling.",
     icon: ShieldCheck,
-    color: "bg-red-500/10 text-red-600",
+    color: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20",
   },
 ];
 
