@@ -6,20 +6,20 @@ import { cn } from "@/lib/utils";
 
 const problems = [
   {
-    title: "Pikiran Terasa Bising",
-    description: "Sulit untuk berhenti memikirkan banyak hal sekaligus yang membuatmu lelah mental.",
+    title: "Mental Overload",
+    description: "A racing mind with too many open tabs, making it difficult to unplug at the end of the day.",
     icon: Ghost,
     color: "text-amber-500",
   },
   {
-    title: "Stres Berlebihan",
-    description: "Tekanan pekerjaan atau tugas yang menumpuk tanpa sempat menarik napas sejenak.",
+    title: "Chronic Tension",
+    description: "Work deadlines and daily demands that keep your nervous system on constant high alert.",
     icon: CloudRain,
     color: "text-blue-500",
   },
   {
-    title: "Butuh Ruang Cerita",
-    description: "Ingin berbagi tapi takut dihakimi? Kamu butuh tempat yang benar-benar aman dan privat.",
+    title: "Nowhere to Unpack",
+    description: "Bottling up thoughts because you worry about being judged or misunderstood by those around you.",
     icon: ShieldX,
     color: "text-rose-500",
   },
@@ -39,13 +39,13 @@ export function ProblemSection() {
             >
               <div className="inline-flex items-center space-x-2 text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/10">
                 <Sparkles className="w-4 h-4" />
-                <span className="font-bold text-xs uppercase tracking-widest">Kenali Dirimu</span>
+                <span className="font-bold text-xs uppercase tracking-widest">Why MindGarden</span>
               </div>
               <h2 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight text-foreground">
-                Kadang, kita hanya perlu <span className="text-primary italic font-serif">didengarkan</span>
+                Modern life is loud. Your mind deserves a <span className="text-primary italic font-serif">quiet room.</span>
               </h2>
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
-                Dunia luar seringkali terlalu berisik. MindGarden hadir sebagai taman yang tenang untukmu kembali mengenali diri sendiri, mengelola stres, dan menemukan kedamaian batin.
+                When responsibilities pile up, it is easy to disconnect from how you truly feel. MindGarden provides a private sanctuary to slow down, reflect without judgment, and regain emotional balance.
               </p>
               
               <div className="flex items-center gap-4 pt-4">
@@ -57,7 +57,7 @@ export function ProblemSection() {
                     ))}
                  </div>
                  <p className="text-sm font-bold text-muted-foreground italic">
-                    Bergabung dengan 1,000+ pengguna lainnya
+                    Joined by hundreds of mindful individuals daily
                  </p>
               </div>
             </motion.div>

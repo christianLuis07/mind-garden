@@ -5,38 +5,38 @@ import { BookOpen, Smile, Wind, Users, BarChart3, ShieldCheck } from "lucide-rea
 
 const features = [
   {
-    title: "Jurnal Pintar",
-    description: "Tuliskan apa saja yang ada di pikiranmu. Analisis kami membantu kamu mengenali pola emosi dari setiap tulisan.",
+    title: "Reflective Journaling",
+    description: "A quiet space to write what is on your mind. Automated sentiment analysis helps you spot subtle emotional shifts over time.",
     icon: BookOpen,
     color: "bg-blue-500/10 text-blue-600",
   },
   {
-    title: "Pantau Mood",
-    description: "Catat bagaimana perasaanmu setiap hari. Lihat perkembangan emosimu melalui grafik yang cantik dan mudah dipahami.",
+    title: "Daily Mood Tracking",
+    description: "Check in with how you feel in seconds. Pair moods with lifestyle factors like sleep and stress to uncover clear patterns.",
     icon: Smile,
     color: "bg-orange-500/10 text-orange-600",
   },
   {
-    title: "Ruang Napas",
-    description: "Tenangkan pikiran yang bising dengan teknik pernapasan terpandu yang dirancang untuk meredakan stres instan.",
+    title: "Guided Breathwork",
+    description: "Evidence-backed pacing techniques including Box Breathing and 4-7-8 to downshift your nervous system whenever tension strikes.",
     icon: Wind,
     color: "bg-teal-500/10 text-teal-600",
   },
   {
-    title: "Komunitas Hangat",
-    description: "Kamu tidak sendirian. Temukan teman cerita di grup dukungan yang aman, anonim, dan penuh empati.",
+    title: "Support Communities",
+    description: "Safe, moderated spaces to connect with peers. Share reflections anonymously or openly with people on similar paths.",
     icon: Users,
     color: "bg-purple-500/10 text-purple-600",
   },
   {
-    title: "Wawasan Diri",
-    description: "Dapatkan laporan mingguan tentang kesehatan mentalmu. Pahami apa yang membuatmu bahagia atau cemas.",
+    title: "Visual Analytics",
+    description: "Clear charts and trend calendars that turn your daily check-ins into actionable awareness of your well-being habits.",
     icon: BarChart3,
     color: "bg-green-500/10 text-green-600",
   },
   {
-    title: "Privasi Total",
-    description: "Keamananmu adalah prioritas kami. Semua data dienkripsi sehingga hanya kamu yang bisa membacanya.",
+    title: "Private by Default",
+    description: "Your journals and check-ins belong solely to you. Protected with robust encryption, strict auth, and zero data selling.",
     icon: ShieldCheck,
     color: "bg-red-500/10 text-red-600",
   },
@@ -53,7 +53,7 @@ export function FeaturesSection() {
             viewport={{ once: true }}
             className="text-primary font-bold text-sm tracking-widest uppercase mb-4"
           >
-            Layanan Kami
+            Features
           </motion.h2>
           <motion.h3
             initial={{ opacity: 0, y: 20 }}
@@ -62,7 +62,7 @@ export function FeaturesSection() {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-6xl font-black mb-6 tracking-tight"
           >
-            Segala hal untuk menjaga <span className="text-primary italic font-serif">kesehatan mentalmu</span>
+            Thoughtful tools for <span className="text-primary italic font-serif">everyday peace of mind</span>
           </motion.h3>
           <motion.p
              initial={{ opacity: 0, y: 20 }}
@@ -71,7 +71,7 @@ export function FeaturesSection() {
              transition={{ delay: 0.2 }}
              className="text-lg md:text-xl text-muted-foreground font-medium"
           >
-            MindGarden menyediakan berbagai alat yang dirancang untuk membantumu mengelola stres dan membangun ketahanan emosional yang lebih baik.
+            MindGarden combines practical check-ins, mindful pauses, and peer support to help you build lasting emotional resilience.
           </motion.p>
         </div>
 

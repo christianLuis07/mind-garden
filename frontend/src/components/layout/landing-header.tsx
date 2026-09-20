@@ -19,9 +19,10 @@ export function LandingHeader() {
   }, []);
 
   const navLinks = [
-    { name: "Fitur", href: "#features" },
-    { name: "Manfaat", href: "#how-it-works" },
-    { name: "Testimoni", href: "#testimonials" },
+    { name: "Features", href: "#features" },
+    { name: "How It Works", href: "#how-it-works" },
+    { name: "Testimonials", href: "#testimonials" },
+    { name: "FAQ", href: "#faq" },
   ];
 
   return (
@@ -61,12 +62,12 @@ export function LandingHeader() {
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/login">
               <Button variant="ghost" className="font-bold text-sm uppercase tracking-widest text-muted-foreground hover:text-primary">
-                Masuk
+                Log In
               </Button>
             </Link>
             <Link href="/register">
               <Button className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-8 h-12 shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95">
-                Daftar Gratis
+                Get Started Free
               </Button>
             </Link>
           </div>
@@ -103,10 +104,10 @@ export function LandingHeader() {
               ))}
               <div className="flex flex-col space-y-4 pt-4">
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full h-14 rounded-2xl font-bold">Masuk</Button>
+                  <Button variant="outline" className="w-full h-14 rounded-2xl font-bold">Log In</Button>
                 </Link>
                 <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-widest">Daftar Gratis</Button>
+                  <Button className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-widest">Get Started Free</Button>
                 </Link>
               </div>
             </div>

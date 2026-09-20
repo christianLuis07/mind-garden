@@ -19,11 +19,11 @@ export const metadata: Metadata = {
   ),
   title: {
     default:
-      "MindGarden — Platform Kesehatan Mental & Emosional | Christian Luis Paskalis Ginting",
+      "MindGarden — Mental Health & Emotional Wellness Platform | Christian Luis Paskalis Ginting",
     template: "%s | MindGarden — Christian Luis Paskalis Ginting",
   },
   description:
-    "MindGarden adalah platform kesehatan mental & kesejahteraan emosional komprehensif karya Christian Luis Paskalis Ginting. Dilengkapi pelacakan suasana hati (mood tracker), jurnal reflektif dengan analisis sentimen AI, panduan pernapasan relaksasi, dan komunitas dukungan aman.",
+    "MindGarden is a full-stack mental health and emotional wellness platform built by Christian Luis Paskalis Ginting. Featuring daily mood tracking, reflective journaling with automated sentiment analysis, guided breathwork, and real-time peer support groups.",
   keywords: [
     "Christian Luis Paskalis Ginting",
     "Christian Luis",

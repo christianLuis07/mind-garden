@@ -5,23 +5,23 @@ import { UserPlus, Calendar, Smile, Sprout } from "lucide-react";
 
 const steps = [
   {
-    title: "Buat Akun Anda",
-    description: "Daftar dalam hitungan detik untuk memulai perjalanan kesehatan mental Anda.",
+    title: "Create Your Space",
+    description: "Sign up in seconds. No payment details, no complex setup required.",
     icon: UserPlus,
   },
   {
-    title: "Catat Setiap Hari",
-    description: "Gunakan jurnal dan mood tracker untuk merekam apa yang Anda rasakan.",
+    title: "Check In Daily",
+    description: "Spend two minutes logging your mood, tagging triggers, or writing freely.",
     icon: Calendar,
   },
   {
-    title: "Pahami Diri Sendiri",
-    description: "Dapatkan insight dari analisis data dan emosi Anda dari waktu ke waktu.",
+    title: "Uncover Patterns",
+    description: "Watch your emotional landscape clarify through weekly trends and sentiment insights.",
     icon: Smile,
   },
   {
-    title: "Tumbuh Bersama",
-    description: "Berbagi dan belajar dalam grup dukungan untuk perkembangan yang berkelanjutan.",
+    title: "Reset & Connect",
+    description: "Ground yourself with paced breathwork or share support in community groups.",
     icon: Sprout,
   },
 ];
@@ -31,9 +31,9 @@ export function HowItWorks() {
     <section id="how-it-works" className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Cara Kerja MindGarden</h2>
+          <h2 className="text-4xl font-bold mb-4">How It Works</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Proses sederhana yang dirancang untuk membantu Anda membangun kebiasaan positif setiap hari.
+            A low-friction daily routine designed to fit effortlessly into your morning or bedtime ritual.
           </p>
         </div>
 

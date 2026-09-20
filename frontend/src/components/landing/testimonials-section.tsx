@@ -5,22 +5,22 @@ import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Siska Putri",
-    role: "Mahasiswa",
-    content: "MindGarden membantu saya mengatasi kecemasan saat skripsi. Fitur jurnalnya benar-benar menenangkan.",
+    name: "Sarah Lin",
+    role: "Product Designer",
+    content: "The mood charts helped me realize that consecutive late nights directly caused my mid-week burnouts. Seeing it on paper changed how I protect my evenings.",
     avatar: "S",
   },
   {
-    name: "Budi Santoso",
+    name: "Marcus Vance",
     role: "Software Engineer",
-    content: "Analisis mood mingguan sangat membantu saya menyadari kapan saya harus beristirahat sejenak.",
-    avatar: "B",
+    content: "MindGarden became my favorite end-of-day ritual. The clean, quiet interface makes journaling feel completely effortless rather than a chore.",
+    avatar: "M",
   },
   {
-    name: "Maya Sari",
-    role: "Ibu Rumah Tangga",
-    content: "Grup dukungannya sangat hangat. Saya merasa tidak sendirian lagi dalam menghadapi tantangan hidup.",
-    avatar: "M",
+    name: "Elena Rostova",
+    role: "Graduate Researcher",
+    content: "The Box Breathing tool is my go-to whenever anxiety spikes before presentations. It's so refreshing to have an app that respects your focus and privacy.",
+    avatar: "E",
   },
 ];
 
@@ -29,9 +29,9 @@ export function TestimonialsSection() {
     <section id="testimonials" className="py-24 glass dark:bg-black/10 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Apa Kata Mereka?</h2>
+          <h2 className="text-4xl font-bold mb-4">Real Experiences</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Kisah nyata dari mereka yang telah menemukan ketenangan bersama MindGarden.
+            How individuals use MindGarden daily to build emotional clarity, decompress, and stay grounded.
           </p>
         </div>
 

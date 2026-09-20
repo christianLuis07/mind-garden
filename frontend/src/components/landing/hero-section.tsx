@@ -25,7 +25,7 @@ export function HeroSection() {
           >
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold tracking-wide">
-              Ruang Aman Kesehatan Mental • Dibuat oleh Christian Luis Paskalis Ginting
+              Private Mental Wellness Space • Built by Christian Luis Paskalis Ginting
             </span>
           </motion.div>
 
@@ -35,8 +35,8 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9]"
           >
-            Rawat <span className="text-primary italic">Ketenanganmu</span> <br />
-            Mulai Hari Ini
+            Care for your mind, <br />
+            one <span className="text-primary italic">honest day</span> at a time.
           </motion.h1>
 
           <motion.p
@@ -45,7 +45,7 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed font-medium"
           >
-            Pahami dirimu lebih dalam melalui jurnal harian, pantau suasana hati, dan temukan dukungan di komunitas yang peduli.
+            Track daily emotional patterns, unpack thoughts in a private journal, and pause with guided breathing exercises—all in one quiet, judgment-free space.
           </motion.p>
 
           <motion.div
@@ -56,12 +56,12 @@ export function HeroSection() {
           >
             <Link href="/register">
               <Button size="lg" className="rounded-2xl px-10 py-8 text-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                Coba Gratis <ArrowRight className="ml-2 w-6 h-6" />
+                Start for Free <ArrowRight className="ml-2 w-6 h-6" />
               </Button>
             </Link>
             <Link href="#features">
               <Button variant="outline" size="lg" className="rounded-2xl px-10 py-8 text-xl font-bold border-2 backdrop-blur-sm transition-all hover:bg-white/30 active:scale-95">
-                Kenali Fitur
+                Explore Features
               </Button>
             </Link>
           </motion.div>
@@ -69,10 +69,10 @@ export function HeroSection() {
           {/* Quick Metrics */}
           <div className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-6">
              {[
-               { icon: Heart, label: "Self Care", color: "text-rose-500" },
-               { icon: Wind, label: "Rileks", color: "text-sky-500" },
-               { icon: Zap, label: "Fokus", color: "text-amber-500" },
-               { icon: Sparkles, label: "Bahagia", color: "text-primary" }
+               { icon: Heart, label: "Self-Care", color: "text-rose-500" },
+               { icon: Wind, label: "Breathe", color: "text-sky-500" },
+               { icon: Zap, label: "Clarity", color: "text-amber-500" },
+               { icon: Sparkles, label: "Community", color: "text-primary" }
              ].map((item, index) => (
                <motion.div
                  key={index}

@@ -35,9 +35,9 @@ export default function Home() {
                 <span className="font-bold text-xl">MindGarden</span>
               </div>
               <p className="text-gray-400 max-w-md">
-                Teman tepercaya untuk kesehatan mentalmu. Pantau, refleksikan,
-                bernapas, dan berkembang dalam ruang yang aman dan penuh
-                dukungan.
+                Your personal space for mental clarity and emotional balance.
+                Track moods, reflect with mindful journaling, and decompress in a
+                private, judgment-free environment.
               </p>
             </div>
 
@@ -50,7 +50,7 @@ export default function Home() {
                     href="#features"
                     className="hover:text-white transition-colors"
                   >
-                    Fitur
+                    Features
                   </a>
                 </li>
                 <li>
@@ -58,7 +58,7 @@ export default function Home() {
                     href="#how-it-works"
                     className="hover:text-white transition-colors"
                   >
-                    Cara Kerja
+                    How It Works
                   </a>
                 </li>
                 <li>
@@ -66,15 +66,15 @@ export default function Home() {
                     href="#testimonials"
                     className="hover:text-white transition-colors"
                   >
-                    Testimoni
+                    Testimonials
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/pricing"
+                    href="#faq"
                     className="hover:text-white transition-colors"
                   >
-                    Pricing
+                    FAQ
                   </a>
                 </li>
               </ul>
@@ -123,7 +123,7 @@ export default function Home() {
           <div className="border-t border-gray-800 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 text-center md:text-left">
-                <span>Dikonsep & Dikembangkan oleh</span>
+                <span>Designed & Engineered by</span>
                 <a
                   href="https://github.com/christianLuis07"
                   target="_blank"
