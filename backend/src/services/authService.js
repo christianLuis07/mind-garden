@@ -37,19 +37,27 @@ class AuthService {
     const verificationToken = tokenService.generateVerificationToken();
     const verificationExpires = tokenService.getVerificationExpiry();
 
+    // Auto-verify if configured (e.g. for testing/portfolio demo on free hosting without SMTP)
+    const autoVerify = process.env.AUTO_VERIFY_EMAIL === "true";
+
     // create user
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        emailVerificationToken: verificationToken,
-        emailVerificationExpires: verificationExpires,
+        isEmailVerified: autoVerify ? true : false,
+        emailVerificationToken: autoVerify ? null : verificationToken,
+        emailVerificationExpires: autoVerify ? null : verificationExpires,
       },
     });
 
-    // Send verification email
-    await emailService.sendVerificationEmail(user, verificationToken);
+    // Send verification email asynchronously so registration responds instantly
+    if (!autoVerify) {
+      emailService.sendVerificationEmail(user, verificationToken).catch((err) => {
+        logger.error("Async verification email failed:", { error: err.message, email });
+      });
+    }
 
     // Generate auth token
     const token = this.generateToken(user.id);
@@ -57,8 +65,13 @@ class AuthService {
     return {
       user: this.sanitizeUser(user),
       token,
-      message:
-        "Registrasi berhasil. Silakan cek email Anda untuk verifikasi akun.",
+      message: autoVerify
+        ? "Registrasi berhasil! Akun Anda telah aktif dan terverifikasi."
+        : "Registrasi berhasil. Silakan cek email Anda untuk verifikasi akun.",
+      verificationUrl:
+        process.env.NODE_ENV !== "production" || process.env.SHOW_VERIFICATION_LINK === "true"
+          ? `${process.env.CLIENT_URL || "https://www.mindgarden-porting.my.id"}/verify-email?token=${verificationToken}`
+          : undefined,
     };
   }
 
@@ -86,8 +99,10 @@ class AuthService {
       },
     });
 
-    // Send Welcome Email
-    await emailService.sendWelcomeEmail(updatedUser);
+    // Send Welcome Email asynchronously
+    emailService.sendWelcomeEmail(updatedUser).catch((err) => {
+      logger.error("Async welcome email failed:", { error: err.message, email: updatedUser.email });
+    });
 
     return {
       user: this.sanitizeUser(updatedUser),
@@ -118,10 +133,12 @@ class AuthService {
       },
     });
 
-    // send verification email
-    await emailService.sendVerificationEmail(user, verificationToken);
+    // send verification email asynchronously
+    emailService.sendVerificationEmail(user, verificationToken).catch((err) => {
+      logger.error("Async resend verification email failed:", { error: err.message, email });
+    });
 
-    return { message: "Email verifikasi telah dikirim ulang" };
+    return { message: "Email verifikasi sedang dikirim. Silakan periksa kotak masuk atau spam Anda." };
   }
 
   async forgotPassword(email) {
@@ -149,8 +166,10 @@ class AuthService {
       },
     });
 
-    // Send password reset email
-    await emailService.sendPasswordResetEmail(user, resetToken);
+    // Send password reset email asynchronously
+    emailService.sendPasswordResetEmail(user, resetToken).catch((err) => {
+      logger.error("Async password reset email failed:", { error: err.message, email });
+    });
 
     return {
       message: "Jika email ada, tautan reset password telah dikirim.",
