@@ -329,7 +329,8 @@ class AuthService {
   sanitizeUser(user) {
     const {
       password,
-      emailVerification,
+      emailVerificationToken,
+      emailVerificationExpires,
       passwordResetToken,
       passwordResetExpires,
       totpSecret,

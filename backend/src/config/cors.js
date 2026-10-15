@@ -10,12 +10,12 @@ const isOriginAllowed = (origin) => {
   // Clean the incoming origin: trim and remove trailing slash
   const cleanOrigin = origin.trim().replace(/\/+$/, "");
 
-  // Allowed domain patterns (localhost, any vercel preview, custom domain + subdomains)
+  // Allowed domain patterns (localhost, verified project vercel preview, custom domain + subdomains)
   const allowedPatterns = [
     /^https?:\/\/localhost(:[0-9]+)?$/,
     /^https?:\/\/127\.0\.0\.1(:[0-9]+)?$/,
     /^https?:\/\/([a-zA-Z0-9-]+\.)*mindgarden-porting\.my\.id$/,
-    /^https?:\/\/([a-zA-Z0-9-]+\.)*vercel\.app$/,
+    /^https?:\/\/([a-zA-Z0-9-]+\.)*mindgarden[a-zA-Z0-9-]*\.vercel\.app$/,
   ];
 
   if (allowedPatterns.some((pattern) => pattern.test(cleanOrigin))) {

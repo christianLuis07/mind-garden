@@ -64,9 +64,17 @@ export function GroupChat({ group, onBack }: GroupChatProps) {
       ? process.env.NEXT_PUBLIC_API_URL.replace("/api/v1", "")
       : "http://localhost:5000";
 
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("mindgarden_token")
+        : null;
+
     socketRef.current = io(SOCKET_URL, {
       withCredentials: true,
       transports: ["websocket", "polling"],
+      auth: {
+        token: token || "",
+      },
     });
 
     socketRef.current.emit("join_group", group.id);

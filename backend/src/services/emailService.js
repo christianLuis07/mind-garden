@@ -81,7 +81,11 @@ class EmailService {
   async sendVerificationEmail(user, verificationToken) {
     const clientUrl = process.env.CLIENT_URL || "https://www.mindgarden-porting.my.id";
     const verificationUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
-    logger.info(`[Email Verification Link for ${user.email}]: ${verificationUrl}`);
+    if (process.env.NODE_ENV !== "production") {
+      logger.debug(`[Email Verification Link for ${user.email}]: ${verificationUrl}`);
+    } else {
+      logger.info(`Verification email prepared for ${user.email}`);
+    }
 
     const html = `
       <!DOCTYPE html>
@@ -137,7 +141,11 @@ class EmailService {
   async sendPasswordResetEmail(user, resetToken) {
     const clientUrl = process.env.CLIENT_URL || "https://www.mindgarden-porting.my.id";
     const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
-    logger.info(`[Password Reset Link for ${user.email}]: ${resetUrl}`);
+    if (process.env.NODE_ENV !== "production") {
+      logger.debug(`[Password Reset Link for ${user.email}]: ${resetUrl}`);
+    } else {
+      logger.info(`Password reset email prepared for ${user.email}`);
+    }
 
     const html = `
       <!DOCTYPE html>

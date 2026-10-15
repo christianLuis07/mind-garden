@@ -37,9 +37,15 @@ const errorHandler = (err, req, res, next) => {
     error = { message, statusCode: 401 };
   }
 
-  res.status(error.statusCode || 500).json({
+  const statusCode = error.statusCode || 500;
+  const clientMessage =
+    statusCode === 500 && process.env.NODE_ENV === "production"
+      ? "Terjadi kesalahan internal pada server"
+      : error.message || "Server Error";
+
+  res.status(statusCode).json({
     success: false,
-    message: error.message || "Server Error",
+    message: clientMessage,
   });
 };
 
